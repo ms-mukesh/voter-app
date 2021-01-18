@@ -4,7 +4,7 @@ const moment = require("moment")
 const {voterMasterRequest,addressMaster,occupationMaster,taskMaster,eventMaster,voterMaster,volunteer_booth,wardMaster,trustFactorMaster,familyMaster,nativePlaceMaster} = db
 const {Op} = db.Sequelize
 const {sequelize} = require("../config/sequlize")
-const  {VOTER_ATTRIBUTES} = require("../handler/common/constants")
+const  {VOTER_ATTRIBUTES,DATABASE_NAME} = require("../handler/common/constants")
 const  {isDefined,filterComparador,mapComparador} = require("../handler/common/commonMethods")
 // const condition = { VoterId: { [Op.eq]: `${volunteerId}`},IsOurVolunteer: { [Op.eq]: '1'}};
 
@@ -150,7 +150,7 @@ const getBoothDetailRemainingForVolunteer = (volunteerId) =>{
     let responseArray = []
     return new Promise((resolve)=>{
         return(
-           sequelize.query("select * from community_db.WardMaster where WardId  not in (select BoothId from community_db.Volunteer_Booth where VolunteerId = "+volunteerId+")").then((res)=>{
+           sequelize.query("select * from "+DATABASE_NAME+".WardMaster where WardId  not in (select BoothId from "+DATABASE_NAME+".Volunteer_Booth where VolunteerId = "+volunteerId+")").then((res)=>{
                if(res){
                    resolve(res[0])
                } else {
@@ -303,7 +303,7 @@ const getBoothWiseVoterList = (boothId,volunteerId) =>{
             .then(async (res) => {
               if(res && res.length>0){
                   let responseArray = []
-                  sequelize.query("select * from community_db.VoterMaster where VoterId not in (SELECT VoterId From community_db.VoterMasterRequest where ByVolunteer="+volunteerId+" and IsApproved=0)").then(async (voterReqData)=>{
+                  sequelize.query("select * from "+DATABASE_NAME+".VoterMaster where VoterId not in (SELECT VoterId From "+DATABASE_NAME+".VoterMasterRequest where ByVolunteer="+volunteerId+" and IsApproved=0)").then(async (voterReqData)=>{
                 if(voterReqData && voterReqData[0].length>0){
                     responseArray = await res.filter(x=>{
                         return !voterReqData[0].some(t=> t.VoterId === x.VoterId)

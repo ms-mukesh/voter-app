@@ -1,6 +1,7 @@
 const JWT_PRIVATE_KEY = "communityTopSecret";
 const NETWORK_FAILED_MESSAGE = 'Failed to login due to network issue';
 const DATA_NOT_FOUND_MESSAGE = 'Data not found';
+const DATABASE_NAME = 'heroku_0f888c1c6017d15';
 const PAGE_LIMIT=30
 const monthArray = [
     "January",
@@ -75,6 +76,8 @@ module.exports={
     marital_status,
     VOLUNTEER_RECEIVER,
     ALL_RECEIVER_FEMALE,
-    ALL_RECEIVER_MALE
+    ALL_RECEIVER_MALE,
+    DATABASE_NAME
+
 }
 
