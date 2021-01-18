@@ -3280,7 +3280,7 @@ const insertBulkDataInDb = (dataArray) =>{
     let updateIndex = 0;
     return new Promise((resolve)=>{
         dataArray.map((memberDetail,outSideIndex)=>{
-            let tempAddress = memberDetail.RoomNo.trim()+","+memberDetail.Address;
+            let tempAddress = memberDetail.HouseNo.trim()+","+memberDetail.Address;
             let condition = {Address: { [Op.eq]: tempAddress.trim() }};
             let AddressId = null;
             let FamilyId = null;
@@ -3289,19 +3289,19 @@ const insertBulkDataInDb = (dataArray) =>{
                 AddressId = responseAddressId;
                 getFamilyId(AddressId).then((responseFamilyId)=>{
                     FamilyId = responseFamilyId;
-                    getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relation.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
+                    getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
                         if(isParentAvailbel){
                             ParentId = isParentAvailbel;
                         }
                         let insMemberObj = {
-                            FirstName:memberDetail.FirstName,
+                            FirstName:memberDetail.Name,
                             MiddleName:memberDetail.MiddleName,
                             Age:memberDetail.Age,
                             Gender:memberDetail.Gender,
-                            VoterVotingId:memberDetail.VoterVotingId,
+                            VoterVotingId:memberDetail.VoterId,
                             FamilyId:FamilyId
                         }
-                        if(memberDetail.Relation.toLowerCase() === 'father'){
+                        if(memberDetail.Relationship.toLowerCase() === 'father'){
                             insMemberObj = {...insMemberObj,FatherId:ParentId}
                         } else {
                             insMemberObj = {...insMemberObj,SpouseId:ParentId}
