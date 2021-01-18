@@ -85,6 +85,8 @@ router.post(
                     "Email",
                     "Gender",
                 ],
+            }).catch((err)=>{
+                console.log("error--",err)
             });
             if (member.length === 0) {
                 return response.status(201).send({ data: "Invalid Login Details" });
