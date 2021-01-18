@@ -633,8 +633,8 @@ const getAllMembers = async (offset, pageNo) => {
                     ],
                 },
             ],
-            offset,
-            limit: pageLimit,
+            // offset,
+            // limit: pageLimit,
         })
         .then(async (res) => {
             if (res.length > 0) {
@@ -3266,6 +3266,7 @@ const checkMemberExistAndEnterDetails = (obj) =>{
     })
 }
 const insertBulkDataInDb = (dataArray) =>{
+    console.log(dataArray)
     const tempArray=[
         // {"VoterVotingId":"RJ/25/194/078352","FirstName":"Brijmohan","MiddleName":"Ratanlal","Relation":"Father","Age":"48","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
         // {"VoterVotingId":"MTW1184191","FirstName":"Pawan","MiddleName":"Brijmohan","Relation":"Husband","Age":"50","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
@@ -3280,41 +3281,45 @@ const insertBulkDataInDb = (dataArray) =>{
     let updateIndex = 0;
     return new Promise((resolve)=>{
         dataArray.map((memberDetail,outSideIndex)=>{
-            let tempAddress = memberDetail.HouseNo.trim()+","+memberDetail.Address;
-            let condition = {Address: { [Op.eq]: tempAddress.trim() }};
-            let AddressId = null;
-            let FamilyId = null;
-            let ParentId = null;
-            getAddressID(tempAddress).then((responseAddressId)=>{
-                AddressId = responseAddressId;
-                getFamilyId(AddressId).then((responseFamilyId)=>{
-                    FamilyId = responseFamilyId;
-                    getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
-                        if(isParentAvailbel){
-                            ParentId = isParentAvailbel;
-                        }
-                        let insMemberObj = {
-                            FirstName:memberDetail.Name,
-                            MiddleName:memberDetail.MiddleName,
-                            Age:memberDetail.Age,
-                            Gender:memberDetail.Gender,
-                            VoterVotingId:memberDetail.VoterId,
-                            FamilyId:FamilyId
-                        }
-                        if(memberDetail.Relationship.toLowerCase() === 'father'){
-                            insMemberObj = {...insMemberObj,FatherId:ParentId}
-                        } else {
-                            insMemberObj = {...insMemberObj,SpouseId:ParentId}
-                        }
-                        checkMemberExistAndEnterDetails(insMemberObj).then((isMemberCreated)=>{
-                            updateIndex = updateIndex + 1;
-                            if(updateIndex >= tempArray.length) {
-                                resolve(true)
-                            }
-                        })
-                    })
-                })
-            })
+            if(isDefined(memberDetail.HouseNo) && isDefined(memberDetail.Address) && isDefined(memberDetail.Gender) &&
+           isDefined(memberDetail.Age) && isDefined(memberDetail.Relationship) && isDefined(memberDetail.Name) && isDefined(memberDetail.MiddleName)
+           ){
+               let tempAddress = memberDetail.HouseNo.toString().trim()+","+memberDetail.Address;
+               let condition = {Address: { [Op.eq]: tempAddress.trim() }};
+               let AddressId = null;
+               let FamilyId = null;
+               let ParentId = null;
+               getAddressID(tempAddress).then((responseAddressId)=>{
+                   AddressId = responseAddressId;
+                   getFamilyId(AddressId).then((responseFamilyId)=>{
+                       FamilyId = responseFamilyId;
+                       getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
+                           if(isParentAvailbel){
+                               ParentId = isParentAvailbel;
+                           }
+                           let insMemberObj = {
+                               FirstName:memberDetail.Name,
+                               MiddleName:memberDetail.MiddleName,
+                               Age:memberDetail.Age,
+                               Gender:memberDetail.Gender,
+                               VoterVotingId:memberDetail.VoterId,
+                               FamilyId:FamilyId
+                           }
+                           if(memberDetail.Relationship.toLowerCase() === 'father'){
+                               insMemberObj = {...insMemberObj,FatherId:ParentId}
+                           } else {
+                               insMemberObj = {...insMemberObj,SpouseId:ParentId}
+                           }
+                           checkMemberExistAndEnterDetails(insMemberObj).then((isMemberCreated)=>{
+                               updateIndex = updateIndex + 1;
+                               if(updateIndex >= tempArray.length) {
+                                   resolve(true)
+                               }
+                           })
+                       })
+                   })
+               })
+           }
         })
     })
 }

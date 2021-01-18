@@ -527,6 +527,7 @@ const tempArray=[
     {"name":"dipak","middleName":"ram kishor","dob":"1997-3-21","gender":"male","voterVotingId":"13","boothId":"4","address":"a-88,hira nagar"}
 ]
 router.post("/addBulkData", async (req, res) => {
+    // console.log(req.body.csvData)
     insertBulkDataInDb(req.body.csvData).then( (isAllInserted)=>{
         if(isAllInserted){
             insertBulkDataInDb(req.body.csvData).then((res1)=>{
