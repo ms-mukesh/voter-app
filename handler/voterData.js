@@ -3279,7 +3279,7 @@ const insertBulkDataInDb = (dataArray) =>{
     ]
     let updateIndex = 0;
     return new Promise((resolve)=>{
-        tempArray.map((memberDetail,outSideIndex)=>{
+        dataArray.map((memberDetail,outSideIndex)=>{
             let tempAddress = memberDetail.RoomNo.trim()+","+memberDetail.Address;
             let condition = {Address: { [Op.eq]: tempAddress.trim() }};
             let AddressId = null;
