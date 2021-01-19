@@ -24,12 +24,13 @@ const env_var = {
         },
         port: process.env.PORT || 3100,
     },
+    // mysql://bba0cd8c7f16ac:9561adb4@us-cdbr-east-03.cleardb.com/heroku_2ad91348d237238?reconnect=true
 
     liveClientTesting: {
         HOST: "us-cdbr-east-03.cleardb.com",
-        USER: "bded972b8d7398",
-        PASSWORD: "f29dff2d",
-        DB: "heroku_0f888c1c6017d15",
+        USER: "bba0cd8c7f16ac",
+        PASSWORD: "9561adb4",
+        DB: "heroku_2ad91348d237238",
         dialect: "mysql",
         pool: {
             max: 5,
