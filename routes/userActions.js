@@ -195,7 +195,9 @@ router.get(
         }
         getMemberData(offset, page)
             .then((members) => {
-                if (members.Data.length > 0) {
+                console.log("called",members)
+                if (members.Data.length >= 0) {
+                    console.log("called")
                     return res
                         .status(200)
                         .send({ data: members.Data, next_endpoint: members.next_endpoint });
