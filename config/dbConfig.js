@@ -1,4 +1,4 @@
-const cenv = "localTesting";
+const cenv = "liveClientTesting";
 // const admin = require("firebase-admin");
 // eslint-disable-next-line import/no-unresolved
 // const serviceAccount = require("../firebase/navgam-production-firebase-adminsdk-rifa7-86a0dd388c.json");
