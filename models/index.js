@@ -26,5 +26,6 @@ db.memberTemplateMaster = require("./memberTemplates.model")
 db.familyRoleMaster = require("./familyRoleMaster.model")
 db.vidhanSabhaMaster = require("./vidhanSabhaMaster.model")
 db.volunteer_booth = require("./volunteer_booth.model")
-db.voterMasterRequest = require("./voterMasterRequest.model")
+db.voterMasterRequest = require("./voterMasterRequest.model");
+db.mlaMaster = require("./MLAMaster.model")
 module.exports = db;

@@ -9,10 +9,10 @@ const cenv = "localTesting";
 // });
 
 const env_var = {
-    production: {
-        HOST: "172.20.10.3",
+    localTesting: {
+        HOST: "localhost",
         USER: "root",
-        PASSWORD: "rzacFp34n;ZTMe",
+        PASSWORD: "lanetteam@1",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",
@@ -25,7 +25,7 @@ const env_var = {
         port: process.env.PORT || 3100,
     },
 
-    localTesting: {
+    liveClientTesting: {
         HOST: "us-cdbr-east-03.cleardb.com",
         USER: "bded972b8d7398",
         PASSWORD: "f29dff2d",

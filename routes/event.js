@@ -115,6 +115,46 @@ router.post(
         }
     }
 );
+
+router.post(
+  "/addMemberTemplateToDbNew/",
+  (req, res, next) => {
+      // eslint-disable-next-line no-restricted-globals
+      req = req.body
+      console.log("data---",req)
+      if (!isDefined(req.templateImage)) {
+          return res.status(201).send({ data: "please send image" });
+      }
+      next();
+  },
+  async (req, res) => {
+      let tokenData = null;
+      await decodeDataFromAccessToken(req.headers.token).then((res) => {
+          if (res) {
+              tokenData = res;
+          }
+      });
+      req = req.body;
+      if(tokenData === null){
+          return res.status(201).send({ data: "Failed to add template" });
+      } else {
+          let obj = {
+              TemplateUrl:req.templateImage,
+              MemberID:tokenData.voterId
+          }
+          addMemberTemplateToDb(obj).then((isCreated)=>{
+              if(isCreated){
+                  res.status(200).send({ data: "added succesfully" });
+              } else {
+                  res.status(201).send({ data: "Failed to add" });
+              }
+          }).catch((err)=>{
+              console.log("error--",err)
+              res.status(201).send({ data: "Failed to add" });
+          })
+      }
+  }
+);
 router.get(
     "/getMemberTemplates/",
     (req, res, next) => {
