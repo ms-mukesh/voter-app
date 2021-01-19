@@ -554,7 +554,7 @@ const getAllMembers = async (offset, pageNo) => {
     let tempMemberArray = [];
     let tempVoterId = [1,8,20,21,22]
     let condition = {
-        IsOurVolunteer: { [Op.eq]: 1 },
+        IsOurVolunteer: { [Op.ne]: 1 },
 
     };
     await voterMaster
