@@ -26,7 +26,7 @@ const MLAMaster = sequelize.define("MLAMaster", {
     indexes: [
         {
             unique: false,
-            fields: ["AdminId"],
+            fields: ["MLAId"],
         },
     ],
 });
