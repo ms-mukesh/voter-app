@@ -552,7 +552,11 @@ const filterData = async (searchKey, sortingCrieteria = null) => {
 
 const getAllMembers = async (offset, pageNo) => {
     let tempMemberArray = [];
-    let condition = "";
+    let tempVoterId = [1,8,20,21,22]
+    let condition = {
+        VoterId: { [Op.notIn]: tempVoterId },
+
+    };
     await voterMaster
         .findAll({
             offset: offset + pageLimit,
