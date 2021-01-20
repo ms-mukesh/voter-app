@@ -1,7 +1,11 @@
 const JWT_PRIVATE_KEY = "communityTopSecret";
 const NETWORK_FAILED_MESSAGE = 'Failed to login due to network issue';
 const DATA_NOT_FOUND_MESSAGE = 'Data not found';
-const DATABASE_NAME = 'heroku_0f888c1c6017d15';
+// const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
+// const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
+// const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
+// const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
+const DATABASE_NAME = 'community_db';//local testing
 const PAGE_LIMIT=30
 const monthArray = [
     "January",

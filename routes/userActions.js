@@ -1,4 +1,4 @@
-const {addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
+const {updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
 const {sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const loadash = require("lodash")
@@ -567,4 +567,147 @@ router.post("/addNewTemplate", async (req, res) => {
         return res.status(201).send({data:"Fail To Add"});
     })
 });
+
+router.get("/getElectionList", async (req, res) => {
+    getAllElectionList().then((data)=>{
+        if(data){
+            return res.status(200).send({data:data});
+        } else {
+            return res.status(201).send({data:"No Election found"});
+        }
+    }).catch((err)=>{
+        return res.status(201).send({data:"No Election found"});
+    })
+});
+
+router.post("/getVolunteerElection", async (req,res,next)=>{
+    if(!isDefined(req.body.volunteerId)){
+        return res.status(201).send({data:"Please provide volunteer"})
+    }
+    next();
+},async (req, res) => {
+    let volunteerElection = [];
+    let volunteerNotElection = [];
+    await getVolunteerElection(req.body.volunteerId).then((data)=>{
+        if(data){
+            volunteerElection = data;
+        }
+    }).catch((err)=>{
+    })
+    await getElectionWithoutVolunteer(req.body.volunteerId).then((data)=>{
+        if(data){
+            volunteerNotElection = data;
+        }
+    })
+    return res.status(200).send({
+        data:{volunteerElection:volunteerElection,volunteerNotElection:volunteerNotElection}
+    })
+});
+router.get("/getVolunteerElectionUsingToken", async (req,res,next)=>{
+    next();
+},async (req, res) => {
+    let tokenData = null;
+    await decodeDataFromAccessToken(req.headers.token).then((res) => {
+        if (res) {
+            tokenData = res;
+        }
+    });
+    console.log("toke",tokenData)
+    if(tokenData === null){
+        return res.status(201).send({
+            data:"data not found"
+        })
+    }
+
+    await getVolunteerElection(tokenData.voterId).then((data)=>{
+        if(data){
+            console.log("called")
+            return res.status(200).send({
+                data:data
+            })
+        } else {
+            return res.status(201).send({
+                data:"data not found"
+            })
+        }
+    }).catch((err)=>{
+        return res.status(201).send({
+            data:"data not found"
+        })
+    })
+
+
+});
+
+router.post(
+    "/updateVolunteerElectionStatus/",
+    (req, res, next) => {
+        req = req.body
+        if (!isDefined(req.volunteerId)) {
+            return res.status(201).send({ data: "please provide volunteer" });
+        }
+        else if (!isDefined(req.electionId)) {
+            return res.status(201).send({ data: "please provide election" });
+        }
+        next();
+    },
+    async (req, res) => {
+        req = req.body
+        updateVolunteerElectionStatus(req).then((isUpdated)=>{
+            if(isUpdated){
+                return res.status(200).send({ data: "Updated.." });
+            } else {
+                return res.status(201).send({ data: "fail to update..." });
+            }
+        }).catch((err)=>{
+            return res.status(201).send({ data: "fail to update..." });
+        })
+    }
+);
+
+router.post("/getVoterForElection", async (req,res,next)=>{
+    if(!isDefined(req.body.electionId)){
+        return res.status(201).send({data:"Please provide Election Details"})
+    }
+    next();
+},async (req, res) => {
+    let voterWhoDoesVote = [];
+    let voterWhoDoesNotVote = [];
+    await getVoterWhoDoesVote(req.body.electionId).then((data)=>{
+        if(data){
+            voterWhoDoesVote = data;
+        }
+    }).catch((err)=>{
+    })
+    await getVoterWhoDoesNotVote(req.body.electionId).then((data)=>{
+        if(data){
+            voterWhoDoesNotVote = data;
+        }
+    })
+    return res.status(200).send({
+        data:{voterWhoDoesVote:voterWhoDoesVote,voterWhoDoesNotVote:voterWhoDoesNotVote}
+    })
+});
+
+router.post("/updateVoterElectionStatus", async (req,res,next)=>{
+    if(!isDefined(req.body.electionId)){
+        return res.status(201).send({data:"Please provide Election Details"})
+    }
+    else if(!isDefined(req.body.voterId)){
+        return res.status(201).send({data:"Please provide Voter Details"})
+    }
+    next();
+},async (req, res) => {
+    updateVoterElectionStatus(req.body).then((isUpdated)=>{
+        if(isUpdated){
+            return res.status(200).send({data:"Updated..."})
+        } else {
+            return res.status(201).send({data:"Fail to Updated..."})
+        }
+    }).catch((err)=>{
+        return res.status(201).send({data:"Fail to Updated..."})
+    })
+});
+
+
 module.exports = router;

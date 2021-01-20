@@ -14,12 +14,18 @@ const notification = require("./routes/notificationRoute")
 const event = require("./routes/event")
 const volunteer = require("./routes/volunteer")
 const {getBoothWiseVoterList,getBoothForVolunteer,getBoothDetailRemainingForVolunteer} = require("./handler/volunteer")
-const {insertBulkDataInDb} = require("./handler/voterData")
+const {getElectionWithoutVolunteer,getVolunteerElection,insertBulkDataInDb,getVoterWhoDoesNotVote,getVoterWhoDoesVote,getAllElectionList} = require("./handler/voterData")
 
 // insertBulkDataInDb("dsd").then((res)=>{})
 // getBoothWiseVoterList(1).then((res)=>{
 //     console.log(res)
 // })
+
+// getElectionWithoutVolunteer(21).then((res)=>{
+//     console.log(res);
+// })
+
+
 const tempArray=[
     {"name":"mukesh bhargav","middleName":"sanjay","dob":"1997-3-21","gender":"male","voterVotingId":"1","boothId":"W-101","roomNo":"1","address":"a-84,hira nagar","relation":"father"},
     {"name":"sanjay kumar","middleName":"manekchand","dob":"1997-3-21","gender":"male","voterVotingId":"2","boothId":"W-101","roomNo":"1","address":"a-84,hira nagar","relation":"father"},

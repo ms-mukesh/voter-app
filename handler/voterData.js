@@ -6,7 +6,8 @@ const fs = require("fs");
 const {
     PAGE_LIMIT,
     monthArray,
-    VOTER_ATTRIBUTES
+    VOTER_ATTRIBUTES,
+    DATABASE_NAME
 } = require("./common/constants");
 const {getMonthFromString,isDefined,checkForValue,checkForValueForUpdate,getIdFromTable,updateTableValue} = require("./common/commonMethods")
 const { fromPath } = require("pdf2pic")
@@ -42,8 +43,10 @@ const {
     familyRoleMaster,
     wardMaster,
     digitalMasterCategory,
-    templateMaster
-
+    templateMaster,
+    election_voter,
+    electionMaster,
+    volunteer_election
 } = db;
 
 let lastPage = 0;
@@ -4339,10 +4342,215 @@ const covertPdfToImage =(pdfUrl)=>{
         catch (e) {
             resolve(false)
         }
-    })}
+    })};
 
+const getVoterWhoDoesNotVote = (ElectionId) =>{
+    return new Promise((resolve)=>{
+        let condition = {
+            ElectionId: { [Op.eq]: ElectionId },
+        };
+
+
+        election_voter.findOne({where:condition}).then((isAnyVoterAvailable)=>{
+            if(isAnyVoterAvailable){
+                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where VoterId not in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
+                    if(votersList){
+                        resolve(votersList[0])
+                    } else{
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    if(err){
+                        resolve(false)
+                    }
+                })
+            } else {
+                voterMaster.findAll().then((allVoters)=>{
+                    if(allVoters){
+                        resolve(allVoters)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    resolve(false)
+                })
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+
+    })
+}
+const getVoterWhoDoesVote = (ElectionId) =>{
+    return new Promise((resolve)=>{
+        let condition = {
+            ElectionId: { [Op.eq]: ElectionId },
+        };
+        election_voter.findOne({where:condition}).then((isAnyVoterAvailable)=>{
+            if(isAnyVoterAvailable){
+                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where VoterId in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
+                    if(votersList){
+                        resolve(votersList[0])
+                    } else{
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    if(err){
+                        resolve(false)
+                    }
+                })
+            } else {
+                resolve([])
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+
+    })
+}
+
+const getAllElectionList = ()=>{
+    return new Promise((resolve)=>{
+        electionMaster.findAll().then((electionList)=>{
+            if(electionList){
+                resolve(electionList)
+            } else {
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+    })
+}
+const getVolunteerElection = (volunteerId) =>{
+    let condition = {
+        VolunteerId: { [Op.eq]: volunteerId },
+    };
+    return new Promise((resolve)=>{
+        volunteer_election.findAll({
+            where:condition,
+            include:[{
+                model:electionMaster
+            }]
+        }).then((volunterElectionList)=>{
+            if(volunterElectionList){
+                resolve(volunterElectionList)
+            } else {
+                resolve(false)
+            }
+        }).catch((err)=>{
+
+        })
+    })
+}
+
+const getElectionWithoutVolunteer = (volunteerId) =>{
+    let condition = {
+        VolunteerId: { [Op.ne]: volunteerId },
+    };
+    return new Promise((resolve)=>{
+      sequelize.query("SELECT * FROM "+DATABASE_NAME+".ElectionMaster where ElectionMasterId not in (select ElectionId from "+DATABASE_NAME+".Volunteer_Election where VolunteerId = "+volunteerId+")")
+          .then((volunterElectionList)=>{
+            if(volunterElectionList){
+                resolve(volunterElectionList[0])
+            } else {
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false);
+
+        })
+    })
+}
+
+const updateVolunteerElectionStatus = (data) =>{
+    return new Promise((resolve)=>{
+        const condition = { VolunteerId: { [Op.eq]: data.volunteerId},ElectionId: { [Op.eq]: data.electionId}};
+        volunteer_election.findOne({where:condition}).then((isAvilable)=>{
+            console.log(isAvilable)
+            if(isAvilable){
+                volunteer_election.destroy({where:condition}).then((isRemoved)=>{
+                    if(isRemoved){
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log("err",err)
+                    resolve(false)
+                })
+            } else {
+                let insObj = {
+                    VolunteerId: data.volunteerId,
+                    ElectionId:data.electionId
+                }
+                volunteer_election.create(insObj).then((isNewCreated)=>{
+                    console.log(isNewCreated)
+                    if(isNewCreated){
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log(err)
+                    resolve(false)
+                })
+            }
+        }).catch((err)=>{
+            console.log("errr--",err)
+            resolve(false)
+        })
+    })
+}
+
+const updateVoterElectionStatus = (data) =>{
+    return new Promise((resolve)=>{
+        const condition = { VoterId: { [Op.eq]: data.voterId},ElectionId: { [Op.eq]: data.electionId}};
+        election_voter.findOne({where:condition}).then((isAvilable)=>{
+            console.log(isAvilable)
+            if(isAvilable){
+                election_voter.destroy({where:condition}).then((isRemoved)=>{
+                    if(isRemoved){
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log("err",err)
+                    resolve(false)
+                })
+            } else {
+                let insObj = {
+                    VoterId: data.voterId,
+                    ElectionId:data.electionId
+                }
+                election_voter.create(insObj).then((isNewCreated)=>{
+                    console.log(isNewCreated)
+                    if(isNewCreated){
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log(err)
+                    resolve(false)
+                })
+            }
+        }).catch((err)=>{
+            console.log("errr--",err)
+            resolve(false)
+        })
+    })
+}
 
 module.exports = {
+    updateVoterElectionStatus,
+    updateVolunteerElectionStatus,
+    getElectionWithoutVolunteer,
+    getVolunteerElection,
+    getAllElectionList,
+    getVoterWhoDoesVote,
+    getVoterWhoDoesNotVote,
     addNewTemplate,
     getTemplateCategory,
     covertPdfToImage,

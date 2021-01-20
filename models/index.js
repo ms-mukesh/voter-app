@@ -28,4 +28,7 @@ db.vidhanSabhaMaster = require("./vidhanSabhaMaster.model")
 db.volunteer_booth = require("./volunteer_booth.model")
 db.voterMasterRequest = require("./voterMasterRequest.model");
 db.mlaMaster = require("./MLAMaster.model")
+db.electionMaster = require("./electionMaster.model")
+db.election_voter = require("./election_voter.model");
+db.volunteer_election = require("./volunteer_election.model")
 module.exports = db;
