@@ -641,7 +641,7 @@ const getAllMembers = async (offset, pageNo) => {
             // limit: pageLimit,
         })
         .then(async (res) => {
-            if (res.length > 0) {
+            if (res.length >= 0) {
                 tempMemberArray.push(res);
                 return {
                     Data: tempMemberArray,
