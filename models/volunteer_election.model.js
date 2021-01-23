@@ -1,6 +1,7 @@
 const { Sequelize, sequelize } = require("../config/sequlize");
 const voterMaster = require("./voterMaster.model");
 const electionMaster = require("./electionMaster.model");
+const boothMaster = require("./wardMaster.model");
 
 const Volunteer_Election = sequelize.define("Volunteer_Election", {
     DataId:{
@@ -21,5 +22,6 @@ const Volunteer_Election = sequelize.define("Volunteer_Election", {
 });
 Volunteer_Election.belongsTo(voterMaster, { foreignKey: "VolunteerId" });
 Volunteer_Election.belongsTo(electionMaster, { foreignKey: "ElectionId" });
+Volunteer_Election.belongsTo(boothMaster, { foreignKey: "BoothId" });
 
 module.exports = Volunteer_Election;

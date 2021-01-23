@@ -1,5 +1,5 @@
-const {updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
-const {sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
+const {insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
+const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const loadash = require("lodash")
 const express = require("express");
@@ -375,13 +375,15 @@ router.post(
         else if (!isDefined(data.isAlive)) {
             return res.status(201).send({ data: "please enter a native isAlive"});
         }
-      next()
+        else if (!isDefined(data.boothId)) {
+            return res.status(201).send({ data: "please enter a booth id"});
+        }
+        next()
 
     },
     (req, res) => {
         let data = req.body;
-        console.log("bodyy--",data)
-        const condition = { Mobile: { [Op.eq]: `${data.mobile}` } };
+        const condition = { Email: { [Op.eq]: `${data.email}` } };
         voterMaster.findAll({attributes:["VoterId"],where:condition}).then((checkUserExist)=>{
             if(checkUserExist.length === 0){
                 let voterInsertObj = {
@@ -397,12 +399,13 @@ router.post(
                     VoterVotingId:data.voterId,
                     DOB:data.DOB,
                     TrustFactorId: data.trustFactorId,
-                    Age:data.age
+                    Age:data.age,
+                    BoothId:data.boothId,
+                    IsOurVolunteer:isDefined(data.ourVolunteer)?data.ourVolunteer:null
                 }
                 if(isDefined(data.profileImage)){
                     voterInsertObj = {...voterInsertObj,ProfileImage:data.profileImage}
                 }
-                console.log(voterInsertObj)
                 if(data.isNewFamily){
                     voterMaster.create(voterInsertObj).then((resOfInsert)=>{
                         if(resOfInsert){
@@ -528,10 +531,10 @@ const tempArray=[
 ]
 router.post("/addBulkData", async (req, res) => {
     // console.log(req.body.csvData)
-    insertBulkDataInDb(req.body.csvData).then( (isAllInserted)=>{
+    insertBulkDataInDb(req.body.csvData,req.body.boothId).then( (isAllInserted)=>{
         if(isAllInserted){
-            insertBulkDataInDb(req.body.csvData).then((res1)=>{
-                insertBulkDataInDb(req.body.csvData).then((res2)=>{
+            insertBulkDataInDb(req.body.csvData,req.body.boothId).then((res1)=>{
+                insertBulkDataInDb(req.body.csvData,req.body.boothId).then((res2)=>{
                     return res.status(200).send({data:"data Added Scussfully"});
                 })
             })
@@ -584,17 +587,20 @@ router.post("/getVolunteerElection", async (req,res,next)=>{
     if(!isDefined(req.body.volunteerId)){
         return res.status(201).send({data:"Please provide volunteer"})
     }
+    else if(!isDefined(req.body.electionId)){
+        return res.status(201).send({data:"Please provide volunteer"})
+    }
     next();
 },async (req, res) => {
     let volunteerElection = [];
     let volunteerNotElection = [];
-    await getVolunteerElection(req.body.volunteerId).then((data)=>{
+    await getVolunteerElection(req.body.volunteerId,req.body.electionId).then((data)=>{
         if(data){
             volunteerElection = data;
         }
     }).catch((err)=>{
     })
-    await getElectionWithoutVolunteer(req.body.volunteerId).then((data)=>{
+    await getElectionWithoutVolunteer(req.body.volunteerId,req.body.electionId).then((data)=>{
         if(data){
             volunteerNotElection = data;
         }
@@ -635,7 +641,54 @@ router.get("/getVolunteerElectionUsingToken", async (req,res,next)=>{
             data:"data not found"
         })
     })
+});
 
+router.post("/getVolunteerElectionBoothToken", async (req,res,next)=>{
+    if(!isDefined(req.body.electionId)){
+        return res.status(201).send({data:"Please provide election details"})
+    }
+    next();
+},async (req, res) => {
+    let tokenData = null;
+    await decodeDataFromAccessToken(req.headers.token).then((res) => {
+        if (res) {
+            tokenData = res;
+        }
+    });
+
+    if(tokenData === null){
+        return res.status(201).send({
+            data:"data not found"
+        })
+    }
+
+    getUserRole(tokenData.voterId).then(async (userRole)=>{
+        if(userRole === "ADMIN"){
+            getAllBooths().then((boothList)=>{
+                if(boothList){
+                    return res.status(200).send({
+                        data:boothList
+                    })
+                }
+            })
+        } else {
+            await getVolunteerElection(tokenData.voterId,req.body.electionId).then((data)=>{
+                if(data){
+                    return res.status(200).send({
+                        data:data
+                    })
+                } else {
+                    return res.status(201).send({
+                        data:"data not found"
+                    })
+                }
+            }).catch((err)=>{
+                return res.status(201).send({
+                    data:"data not found"
+                })
+            })
+        }
+    })
 
 });
 
@@ -673,13 +726,13 @@ router.post("/getVoterForElection", async (req,res,next)=>{
 },async (req, res) => {
     let voterWhoDoesVote = [];
     let voterWhoDoesNotVote = [];
-    await getVoterWhoDoesVote(req.body.electionId).then((data)=>{
+    await getVoterWhoDoesVote(req.body.electionId,req.body.boothId).then((data)=>{
         if(data){
             voterWhoDoesVote = data;
         }
     }).catch((err)=>{
     })
-    await getVoterWhoDoesNotVote(req.body.electionId).then((data)=>{
+    await getVoterWhoDoesNotVote(req.body.electionId,req.body.boothId).then((data)=>{
         if(data){
             voterWhoDoesNotVote = data;
         }
@@ -706,6 +759,34 @@ router.post("/updateVoterElectionStatus", async (req,res,next)=>{
         }
     }).catch((err)=>{
         return res.status(201).send({data:"Fail to Updated..."})
+    })
+});
+
+router.get("/getAllBoothList", async (req,res,next)=>{
+    next();
+},async (req, res) => {
+    getAllBooths().then((boothList)=>{
+        if(boothList){
+            return res.status(200).send({data:boothList})
+        } else {
+            return res.status(201).send({data:"booth not found"})
+        }
+    }).catch((err)=>{
+        return res.status(201).send({data:"booth not found"})
+    })
+});
+
+router.post("/insertNewBooth", async (req,res,next)=>{
+    next();
+},async (req, res) => {
+    insertNewBooth(req.body).then((isAdded)=>{
+        if(isAdded){
+            return res.status(200).send({data:isAdded})
+        } else {
+            return res.status(201).send({data:"fail to add"})
+        }
+    }).catch((err)=>{
+        return res.status(201).send({data:"fail to add"})
     })
 });
 

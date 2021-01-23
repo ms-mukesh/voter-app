@@ -1,14 +1,4 @@
-
-const cenv = "localTesting";
-// const admin = require("firebase-admin");
-// eslint-disable-next-line import/no-unresolved
-// const serviceAccount = require("../firebase/navgam-production-firebase-adminsdk-rifa7-86a0dd388c.json");
-//
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-//     databaseURL: "https://navgam-production.firebaseio.com",
-// });
-
+const cenv = "liveClientTesting";
 const env_var = {
     localTesting: {
         HOST: "localhost",
@@ -25,22 +15,6 @@ const env_var = {
         },
         port: process.env.PORT || 3100,
     },
-    // liveClientTesting: {
-    //     HOST: "us-cdbr-east-03.cleardb.com",
-    //     USER: "bba0cd8c7f16ac",
-    //     PASSWORD: "9561adb4",
-    //     DB: "heroku_2ad91348d237238",
-    //     dialect: "mysql",
-    //     pool: {
-    //         max: 5,
-    //         min: 0,
-    //         acquire: 30000,
-    //         idle: 10000,
-    //     },
-    //     port: process.env.PORT || 3101,
-    // },
-
-
     liveClientTesting: {
         HOST: "us-cdbr-east-03.cleardb.com",
         USER: "bded972b8d7398",

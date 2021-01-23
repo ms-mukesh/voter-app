@@ -3272,7 +3272,7 @@ const checkMemberExistAndEnterDetails = (obj) =>{
         })
     })
 }
-const insertBulkDataInDb = (dataArray) =>{
+const insertBulkDataInDb = (dataArray,boothId) =>{
     console.log(dataArray)
     const tempArray=[
         // {"VoterVotingId":"RJ/25/194/078352","FirstName":"Brijmohan","MiddleName":"Ratanlal","Relation":"Father","Age":"48","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
@@ -3310,7 +3310,8 @@ const insertBulkDataInDb = (dataArray) =>{
                                Age:memberDetail.Age,
                                Gender:memberDetail.Gender,
                                VoterVotingId:memberDetail.VoterId,
-                               FamilyId:FamilyId
+                               FamilyId:FamilyId,
+                               BoothId:boothId
                            }
                            if(memberDetail.Relationship.toLowerCase() === 'father'){
                                insMemberObj = {...insMemberObj,FatherId:ParentId}
@@ -4344,7 +4345,7 @@ const covertPdfToImage =(pdfUrl)=>{
         }
     })};
 
-const getVoterWhoDoesNotVote = (ElectionId) =>{
+const getVoterWhoDoesNotVote = (ElectionId,BoothId) =>{
     return new Promise((resolve)=>{
         let condition = {
             ElectionId: { [Op.eq]: ElectionId },
@@ -4353,7 +4354,7 @@ const getVoterWhoDoesNotVote = (ElectionId) =>{
 
         election_voter.findOne({where:condition}).then((isAnyVoterAvailable)=>{
             if(isAnyVoterAvailable){
-                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where VoterId not in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
+                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where BoothId = "+BoothId+" and VoterId not in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
                     if(votersList){
                         resolve(votersList[0])
                     } else{
@@ -4365,7 +4366,10 @@ const getVoterWhoDoesNotVote = (ElectionId) =>{
                     }
                 })
             } else {
-                voterMaster.findAll().then((allVoters)=>{
+                let conditionForVoterMaster = {
+                    BoothId: { [Op.eq]: BoothId },
+                };
+                voterMaster.findAll({where:conditionForVoterMaster}).then((allVoters)=>{
                     if(allVoters){
                         resolve(allVoters)
                     } else {
@@ -4381,14 +4385,14 @@ const getVoterWhoDoesNotVote = (ElectionId) =>{
 
     })
 }
-const getVoterWhoDoesVote = (ElectionId) =>{
+const getVoterWhoDoesVote = (ElectionId,BoothId) =>{
     return new Promise((resolve)=>{
         let condition = {
             ElectionId: { [Op.eq]: ElectionId },
         };
         election_voter.findOne({where:condition}).then((isAnyVoterAvailable)=>{
             if(isAnyVoterAvailable){
-                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where VoterId in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
+                sequelize.query("SELECT * FROM "+DATABASE_NAME+".VoterMaster where BoothId = "+BoothId+" and VoterId in(select VoterId from "+DATABASE_NAME+".Election_Voter where ElectionId="+ElectionId+")").then((votersList)=>{
                     if(votersList){
                         resolve(votersList[0])
                     } else{
@@ -4422,34 +4426,39 @@ const getAllElectionList = ()=>{
         })
     })
 }
-const getVolunteerElection = (volunteerId) =>{
-    let condition = {
-        VolunteerId: { [Op.eq]: volunteerId },
-    };
+const getVolunteerElection = (volunteerId,electionId) =>{
     return new Promise((resolve)=>{
-        volunteer_election.findAll({
-            where:condition,
-            include:[{
-                model:electionMaster
-            }]
-        }).then((volunterElectionList)=>{
+        sequelize.query("SELECT * FROM "+DATABASE_NAME+".WardMaster where WardId in (select BoothId from "+DATABASE_NAME+".Volunteer_Election where ElectionId = "+electionId+" and VolunteerId ="+volunteerId+")")
+            .then((volunterElectionList)=>{
             if(volunterElectionList){
-                resolve(volunterElectionList)
+                resolve(volunterElectionList[0])
             } else {
                 resolve(false)
             }
         }).catch((err)=>{
-
+                resolve(false)
+        })
+    })
+}
+const getElectionBoothForAdmin = (electionId) =>{
+    return new Promise((resolve)=>{
+        sequelize.query("SELECT * FROM "+DATABASE_NAME+".WardMaster")
+            .then((volunterElectionList)=>{
+                if(volunterElectionList){
+                    resolve(volunterElectionList[0])
+                } else {
+                    resolve(false)
+                }
+            }).catch((err)=>{
+            resolve(false)
         })
     })
 }
 
-const getElectionWithoutVolunteer = (volunteerId) =>{
-    let condition = {
-        VolunteerId: { [Op.ne]: volunteerId },
-    };
+
+const getElectionWithoutVolunteer = (volunteerId,electionId) =>{
     return new Promise((resolve)=>{
-      sequelize.query("SELECT * FROM "+DATABASE_NAME+".ElectionMaster where ElectionMasterId not in (select ElectionId from "+DATABASE_NAME+".Volunteer_Election where VolunteerId = "+volunteerId+")")
+      sequelize.query("SELECT * FROM "+DATABASE_NAME+".WardMaster where WardId not in (select BoothId from "+DATABASE_NAME+".Volunteer_Election where ElectionId = "+electionId+" and VolunteerId ="+volunteerId+")")
           .then((volunterElectionList)=>{
             if(volunterElectionList){
                 resolve(volunterElectionList[0])
@@ -4465,9 +4474,8 @@ const getElectionWithoutVolunteer = (volunteerId) =>{
 
 const updateVolunteerElectionStatus = (data) =>{
     return new Promise((resolve)=>{
-        const condition = { VolunteerId: { [Op.eq]: data.volunteerId},ElectionId: { [Op.eq]: data.electionId}};
+        const condition = { VolunteerId: { [Op.eq]: data.volunteerId},ElectionId: { [Op.eq]: data.electionId},BoothId: { [Op.eq]: data.boothId}};
         volunteer_election.findOne({where:condition}).then((isAvilable)=>{
-            console.log(isAvilable)
             if(isAvilable){
                 volunteer_election.destroy({where:condition}).then((isRemoved)=>{
                     if(isRemoved){
@@ -4482,7 +4490,8 @@ const updateVolunteerElectionStatus = (data) =>{
             } else {
                 let insObj = {
                     VolunteerId: data.volunteerId,
-                    ElectionId:data.electionId
+                    ElectionId:data.electionId,
+                    BoothId:data.boothId
                 }
                 volunteer_election.create(insObj).then((isNewCreated)=>{
                     console.log(isNewCreated)
@@ -4543,7 +4552,37 @@ const updateVoterElectionStatus = (data) =>{
     })
 }
 
+const getAllBooths = () =>{
+    return new Promise((resolve)=>{
+        wardMaster.findAll().then((res)=>{
+            if(res){
+                resolve(res)
+            } else{
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+    })
+}
+const insertNewBooth = (boothData) =>{
+    return new Promise((resolve)=>{
+        wardMaster.create(boothData).then((isCreated)=>{
+            if(isCreated){
+                resolve(isCreated.dataValues.WardId)
+            } else {
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+    })
+}
+
+
 module.exports = {
+    insertNewBooth,
+    getAllBooths,
     updateVoterElectionStatus,
     updateVolunteerElectionStatus,
     getElectionWithoutVolunteer,

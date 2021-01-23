@@ -99,6 +99,7 @@ router.post(
             generateAccessToken(payLoadDataForAccessToken).then((accessToken)=>{
                 if(accessToken){
                     let dataForResponse = {
+                        voterId:member[0].dataValues.VoterId,
                         name : member[0].dataValues.FirstName + " "+member[0].dataValues.MiddleName ,
                         gender : member[0].dataValues.Gender,
                         profileImage : member[0].dataValues.ProfileImage,
