@@ -7,14 +7,17 @@ const {
     PAGE_LIMIT,
     monthArray,
     VOTER_ATTRIBUTES,
-    DATABASE_NAME
+    DATABASE_NAME,
+    VOLUNTEER,
+    ADMIN,
+    NORMAL
 } = require("./common/constants");
-const {getMonthFromString,isDefined,checkForValue,checkForValueForUpdate,getIdFromTable,updateTableValue} = require("./common/commonMethods")
+const {getAllAdminMemberId,getAllVolunteerId,getUserRole,getMonthFromString,isDefined,checkForValue,checkForValueForUpdate,getIdFromTable,updateTableValue} = require("./common/commonMethods");
 const { fromPath } = require("pdf2pic")
 const uuid = require("uuid-v4");
 const { Storage } = require("@google-cloud/storage");
 // eslint-disable-next-line import/order
-
+//select * from community_db.VoterMaster where BoothId in(SELECT BoothId FROM community_db.Volunteer_Booth where VolunteerId = 8);
 
 const storage = new Storage({
     projectId: "textrecognize-e0630",
@@ -46,7 +49,8 @@ const {
     templateMaster,
     election_voter,
     electionMaster,
-    volunteer_election
+    volunteer_election,
+    volunteer_booth
 } = db;
 
 let lastPage = 0;
@@ -68,10 +72,13 @@ const tempArray=[
     {"VoterVotingId":"RJ/25/194/078525","FirstName":"Sundar","MiddleName":"Bheruram","Relation":"Husband","Age":"81","Gender":"Female","RoomNo":"2","Address":"Bus stand, Khatukhurd"}
 ]
 
-const filterData = async (searchKey, sortingCrieteria = null) => {
+const filterData = async (searchKey, sortingCrieteria = null,memberId) => {
     // eslint-disable-next-line no-async-promise-executor,no-unused-vars
     return new Promise(async (resolve, reject) => {
         let tempMemberArray = [];
+        let tempVoterId = []
+        let tempBoothId = []
+        let volunteerCondition = null;
         const dob = "";
         let memberMasterCondition = {
             MiddleName: { [Op.ne]: null },
@@ -277,33 +284,6 @@ const filterData = async (searchKey, sortingCrieteria = null) => {
                 )
             );
         }
-
-
-        // if (isDefined(searchKey.MinDate) || isDefined(searchKey.MaxDate)) {
-        //     if (isDefined(searchKey.MinDate) && isDefined(searchKey.MaxDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.between]: [searchKey.MinDate, searchKey.MaxDate],
-        //             },
-        //         };
-        //     } else if (isDefined(searchKey.MinDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.gte]: searchKey.MinDate,
-        //             },
-        //         };
-        //     } else if (isDefined(searchKey.MaxDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.lte]: searchKey.MaxDate,
-        //             },
-        //         };
-        //     }
-        // }
-
         if (isDefined(searchKey.MinAge) || isDefined(searchKey.MaxAge)) {
             if (isDefined(searchKey.MinAge) && isDefined(searchKey.MaxAge)) {
                 memberMasterCondition = {
@@ -328,69 +308,6 @@ const filterData = async (searchKey, sortingCrieteria = null) => {
                 };
             }
         }
-
-
-        // if (isDefined(searchKey.MinDate) || isDefined(searchKey.MaxDate)) {
-        //     if (isDefined(searchKey.MinDate) && isDefined(searchKey.MaxDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.between]: [searchKey.MinDate, searchKey.MaxDate],
-        //             },
-        //         };
-        //     } else if (isDefined(searchKey.MinDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.gte]: searchKey.MinDate,
-        //             },
-        //         };
-        //     } else if (isDefined(searchKey.MaxDate)) {
-        //         memberMasterCondition = {
-        //             ...memberMasterCondition,
-        //             DOB: {
-        //                 [Op.lte]: searchKey.MaxDate,
-        //             },
-        //         };
-        //     }
-        // }
-        //
-        // if (isDefined(searchKey.MinAge) || isDefined(searchKey.MaxAge)) {
-        //     let minAge = 365.25;
-        //     let maxAge = 200 * 365.25;
-        //
-        //     if (isDefined(searchKey.MinAge)) {
-        //         minAge = parseInt(searchKey.MinAge) * 365.25;
-        //     }
-        //     if (isDefined(searchKey.MaxAge)) {
-        //         maxAge = parseInt(searchKey.MaxAge) * 365.25;
-        //     }
-        //     condArray.push(
-        //         sequelize.where(
-        //             sequelize.fn(
-        //                 "datediff",
-        //                 new Date(),
-        //                 sequelize.col("VoterMaster.DOB")
-        //             ),
-        //             {
-        //                 [Op.gte]: minAge,
-        //             }
-        //         )
-        //     );
-        //     condArray.push(
-        //         sequelize.where(
-        //             sequelize.fn(
-        //                 "datediff",
-        //                 new Date(),
-        //                 sequelize.col("VoterMaster.DOB")
-        //             ),
-        //             {
-        //                 [Op.lte]: maxAge,
-        //             }
-        //         )
-        //     );
-        // }
-
 
         if (isDefined(searchKey.City)) {
             addressMasterCondition = {
@@ -423,6 +340,41 @@ const filterData = async (searchKey, sortingCrieteria = null) => {
                 Name: searchKey.NativePlace,
             };
         }
+
+        await getAllAdminMemberId().then((adminId)=>{
+            if(adminId){
+                tempVoterId.push(...adminId)
+            }
+        })
+        await getUserRole(memberId).then(async (userRole)=>{
+            if(userRole === VOLUNTEER){
+                volunteerCondition = {
+                    VolunteerId: { [Op.eq]: memberId },
+                };
+                await volunteer_booth.findAll({
+                    attributes:['BoothId'],
+                    where:volunteerCondition
+                }).then((volunteerBoothData)=>{
+                    if(volunteerBoothData){
+                        volunteerBoothData.map((item)=>{
+                            tempBoothId.push(item.dataValues.BoothId)
+                        })
+                        memberMasterCondition = {
+                            ...memberMasterCondition,
+                            BoothId: { [Op.in]: tempBoothId },
+                        };
+                    }
+                })
+                await getAllVolunteerId().then((volunteerId)=>{
+                    if(volunteerId){
+                        tempVoterId.push(...volunteerId)
+                    }
+                })
+            }
+        })
+        memberMasterCondition = {
+            ...memberMasterCondition,VoterId: { [Op.notIn]: tempVoterId },
+        };
 
         await voterMaster
             .findAll({
@@ -553,13 +505,48 @@ const filterData = async (searchKey, sortingCrieteria = null) => {
     });
 };
 
-const getAllMembers = async (offset, pageNo) => {
+const getAllMembers = async (offset, pageNo,memberId) => {
     let tempMemberArray = [];
-    let tempVoterId = [1,8,20,21,22]
+    let tempVoterId = [memberId]
+    let tempBoothId = []
     let condition = {
         VoterId: { [Op.notIn]: tempVoterId },
-
     };
+    let volunteerCondition = null;
+    await getAllAdminMemberId().then((adminId)=>{
+        if(adminId){
+            tempVoterId.push(...adminId)
+        }
+    })
+    await getUserRole(memberId).then(async (userRole)=>{
+            if(userRole === VOLUNTEER){
+                 volunteerCondition = {
+                     VolunteerId: { [Op.eq]: memberId },
+                };
+                await volunteer_booth.findAll({
+                     attributes:['BoothId'],
+                     where:volunteerCondition
+                 }).then((volunteerBoothData)=>{
+                     if(volunteerBoothData){
+                         volunteerBoothData.map((item)=>{
+                             tempBoothId.push(item.dataValues.BoothId)
+                         })
+                         condition = {
+                             ...condition,
+                             BoothId: { [Op.in]: tempBoothId },
+                         };
+                     }
+                 })
+                await getAllVolunteerId().then((volunteerId)=>{
+                    if(volunteerId){
+                        tempVoterId.push(...volunteerId)
+                    }
+                })
+            }
+    })
+    // condition = {
+    //     VoterId: { [Op.notIn]: tempVoterId },
+    // };
     await voterMaster
         .findAll({
             offset: offset + pageLimit,
@@ -574,11 +561,10 @@ const getAllMembers = async (offset, pageNo) => {
                 nextUrl = "null";
             }
         });
-
     await voterMaster
         .findAll({
             attributes: VOTER_ATTRIBUTES,
-            where: condition,
+            where:condition,
             order: [
                 [
                     sequelize.fn(
@@ -660,13 +646,45 @@ const getAllMembers = async (offset, pageNo) => {
         return { Data: tempMemberArray, next_endpoint: nextUrl };
     }
     return { Data: tempMemberArray, next_endpoint: nextUrl };
+    // getUserRole(memberId).then(async (userRole)=>{
+    //     if(userRole === VOLUNTEER){
+    //          volunteerCondition = {
+    //              VolunteerId: { [Op.eq]: memberId },
+    //         };
+    //          volunteer_booth.findAll({
+    //              attributes:['BoothId'],
+    //              where:volunteerCondition
+    //          }).then((volunteerBoothData)=>{
+    //              if(volunteerBoothData){
+    //                  volunteerBoothData.map((item)=>{
+    //                      tempBoothId.push(item.dataValues.BoothId)
+    //                  })
+    //                  condition = {
+    //                      ...condition,
+    //                      BoothId: { [Op.in]: tempBoothId },
+    //                  };
+    //              }
+    //          })
+    //
+    //     } else if(userRole === ADMIN){
+    //
+    //     } else {
+    //
+    //     }
+    //
+    // }).catch((err)=>{
+    //     return { Data: [], next_endpoint: nextUrl };
+    // })
 };
-const searchData = async (searchKey) => {
+const searchData = async (searchKey,memberId) => {
     // eslint-disable-next-line no-async-promise-executor,no-unused-vars
     return new Promise(async (resolve, reject) => {
         let tempMemberArray = [];
         let dob = "";
-        console.log(searchKey)
+        let tempVoterId = [memberId]
+        let tempBoothId = []
+        let volunteerCondition = null;
+
         if (searchKey.length > 2) {
             const tempMonthName = searchKey;
             let tempName = "";
@@ -685,7 +703,7 @@ const searchData = async (searchKey) => {
             });
         }
 
-        const condition = {
+        let condition = {
             // MiddleName: { [Op.ne]: null },
             nameTxt: sequelize.or(
                 sequelize.where(
@@ -711,6 +729,40 @@ const searchData = async (searchKey) => {
                 ),
                 sequelize.where(sequelize.col("VoterMaster.DOB"), "LIKE", dob.trim())
             ),
+        };
+        await getAllAdminMemberId().then((adminId)=>{
+            if(adminId){
+                tempVoterId.push(...adminId)
+            }
+        })
+        await getUserRole(memberId).then(async (userRole)=>{
+            if(userRole === VOLUNTEER){
+                volunteerCondition = {
+                    VolunteerId: { [Op.eq]: memberId },
+                };
+                await volunteer_booth.findAll({
+                    attributes:['BoothId'],
+                    where:volunteerCondition
+                }).then((volunteerBoothData)=>{
+                    if(volunteerBoothData){
+                        volunteerBoothData.map((item)=>{
+                            tempBoothId.push(item.dataValues.BoothId)
+                        })
+                        condition = {
+                            ...condition,
+                            BoothId: { [Op.in]: tempBoothId },
+                        };
+                    }
+                })
+                await getAllVolunteerId().then((volunteerId)=>{
+                    if(volunteerId){
+                        tempVoterId.push(...volunteerId)
+                    }
+                })
+            }
+        })
+        condition = {
+            ...condition,VoterId: { [Op.notIn]: tempVoterId },
         };
         await voterMaster
             .findAll({
@@ -1166,7 +1218,7 @@ const addDeviceId = async (deviceId, userId) => {
     }
 };
 
-const getMemberData = (offset, pageNo) => {
+const getMemberData = (offset, pageNo,memberId) => {
     return new Promise((resolve) => {
         // eslint-disable-next-line no-shadow
         let nextUrl = "";
@@ -1177,7 +1229,7 @@ const getMemberData = (offset, pageNo) => {
             pageLimit = PAGE_LIMIT;
         }
 
-        getAllMembers(offset, pageNo).then((data) => {
+        getAllMembers(offset, pageNo,memberId).then((data) => {
             nextUrl = data.next_endpoint;
             return resolve({ Data: data.Data[0], next_endpoint: nextUrl });
         });
@@ -3134,25 +3186,49 @@ const getBoothDataFromBoothId = (boothId) =>{
         })
     })
 }
-const getAddressID = (address)=>{
+const getBoothAddress = (boothId) =>{
     return new Promise((resolve)=>{
-        let condition = {Address: { [Op.eq]: address.trim() }};
-        let insAddressObj = {
-            "Address":address,
-            "CityOrVillageName":"SURAT",
-            "DistrictName":"SURAT",
-            "StateName":"GUJARAT",
-            "CountryName":"INDIA",
-            "PinCode":"395010"
-        }
+        let boothMasterCondition = {WardId: { [Op.eq]: boothId }};
+        wardMaster.findOne({where:boothMasterCondition}).then((wardData)=>{
+            if(wardData){
+                let obj = {
+                    "Address":wardData.dataValues.WardAddress,
+                    "CityOrVillageName":wardData.dataValues.WardCity,
+                    "DistrictName":wardData.dataValues.DistrictName,
+                    "StateName":wardData.dataValues.WardState,
+                    "CountryName":"INDIA",
+                }
+                return resolve(obj)
+            } else {
+                return resolve(false)
+            }
+        }).catch((err)=>{
+            return resolve(false)
+        })
+
+    })
+}
+const getAddressID = (address,addressObj)=>{
+    return new Promise((resolve)=>{
+        let condition = {Address: { [Op.eq]: address.toString() }};
         addressMaster.findOne({where:condition}).then((isAddressAvailable)=>{
             if(isAddressAvailable){
                 return resolve(isAddressAvailable.dataValues.AddressId)
             } else {
+                let insAddressObj = {
+                    "Address":address.trim(),
+                    "CityOrVillageName":addressObj.CityOrVillageName,
+                    "DistrictName":addressObj.DistrictName,
+                    "StateName":addressObj.StateName,
+                    "CountryName":"INDIA",
+                    "PinCode":"395010"
+                }
                 addressMaster.create(insAddressObj).then((isNewAddressCreated)=>{
                     if(isNewAddressCreated){
+                        console.log("created new--")
                         return resolve(isNewAddressCreated.dataValues.AddressId)
                     } else {
+                        console.log("failt to create new--")
                         return resolve(null)
                     }
                 }).catch((err)=>{
@@ -3273,62 +3349,61 @@ const checkMemberExistAndEnterDetails = (obj) =>{
     })
 }
 const insertBulkDataInDb = (dataArray,boothId) =>{
-    console.log(dataArray)
-    const tempArray=[
-        // {"VoterVotingId":"RJ/25/194/078352","FirstName":"Brijmohan","MiddleName":"Ratanlal","Relation":"Father","Age":"48","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-        // {"VoterVotingId":"MTW1184191","FirstName":"Pawan","MiddleName":"Brijmohan","Relation":"Husband","Age":"50","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-        // {"VoterVotingId":"ABZBO917542","FirstName":"Vinod","MiddleName":"Omprakash","Relation":"Father","Age":"41","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-        // {"VoterVotingId":"AZB0917534","FirstName":"Munni Devi","MiddleName":"Vinod","Relation":"Husband","Age":"38","Gender":"Female","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-        // {"VoterVotingId":"AZB0800276","FirstName":"Sugani Devi","MiddleName":"Omprakash","Relation":"Husband","Age":"70","Gender":"Female","RoomNo":"2","Address":"Bus stand, Khatukhurd"},
-        // {"VoterVotingId":"RJ/25/194/078525","FirstName":"Sundar","MiddleName":"Bheruram","Relation":"Husband","Age":"81","Gender":"Female","RoomNo":"2","Address":"Bus stand, Khatukhurd"}
-        {"VoterVotingId":"RJ/25/194/078533","FirstName":"Mukesh","MiddleName":"Sanjay","Relation":"Father","Age":"23","Gender":"male","RoomNo":"2","Address":"Bus stand, Khatukhurd"},
-        {"VoterVotingId":"RJ/25/194/078534","FirstName":"Sanjay","MiddleName":"Manekchand","Relation":"Father","Age":"45","Gender":"male","RoomNo":"2","Address":"Bus stand, Khatukhurd"},
-        {"VoterVotingId":"RJ/25/194/078535","FirstName":"Manekchand","MiddleName":"Fhoolchand","Relation":"Father","Age":"78","Gender":"male","RoomNo":"2","Address":"Bus stand, Khatukhurd"}
-    ]
     let updateIndex = 0;
     return new Promise((resolve)=>{
-        dataArray.map((memberDetail,outSideIndex)=>{
-            if(isDefined(memberDetail.HouseNo) && isDefined(memberDetail.Address) && isDefined(memberDetail.Gender) &&
-           isDefined(memberDetail.Age) && isDefined(memberDetail.Relationship) && isDefined(memberDetail.Name) && isDefined(memberDetail.MiddleName)
-           ){
-               let tempAddress = memberDetail.HouseNo.toString().trim()+","+memberDetail.Address;
-               let condition = {Address: { [Op.eq]: tempAddress.trim() }};
-               let AddressId = null;
-               let FamilyId = null;
-               let ParentId = null;
-               getAddressID(tempAddress).then((responseAddressId)=>{
-                   AddressId = responseAddressId;
-                   getFamilyId(AddressId).then((responseFamilyId)=>{
-                       FamilyId = responseFamilyId;
-                       getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
-                           if(isParentAvailbel){
-                               ParentId = isParentAvailbel;
-                           }
-                           let insMemberObj = {
-                               FirstName:memberDetail.Name,
-                               MiddleName:memberDetail.MiddleName,
-                               Age:memberDetail.Age,
-                               Gender:memberDetail.Gender,
-                               VoterVotingId:memberDetail.VoterId,
-                               FamilyId:FamilyId,
-                               BoothId:boothId
-                           }
-                           if(memberDetail.Relationship.toLowerCase() === 'father'){
-                               insMemberObj = {...insMemberObj,FatherId:ParentId}
-                           } else {
-                               insMemberObj = {...insMemberObj,SpouseId:ParentId}
-                           }
-                           checkMemberExistAndEnterDetails(insMemberObj).then((isMemberCreated)=>{
-                               updateIndex = updateIndex + 1;
-                               if(updateIndex >= tempArray.length) {
-                                   resolve(true)
-                               }
-                           })
-                       })
-                   })
-               })
-           }
+        getBoothAddress(boothId).then((bothAddress)=>{
+            if(bothAddress){
+                let boothData = bothAddress
+                dataArray.map((memberDetail,outSideIndex)=>{
+                    if(isDefined(memberDetail.HouseNo) && isDefined(memberDetail.Address) && isDefined(memberDetail.Gender) &&
+                        isDefined(memberDetail.Age) && isDefined(memberDetail.Relationship) && isDefined(memberDetail.Name) && isDefined(memberDetail.MiddleName)
+                    ){
+                        let tempAddress = memberDetail.HouseNo.toString().trim()+","+memberDetail.Address.toString().toLowerCase().trim();
+                        let condition = {Address: { [Op.eq]: tempAddress.trim() }};
+                        let AddressId = null;
+                        let FamilyId = null;
+                        let ParentId = null;
+                        getAddressID(tempAddress,boothData).then((responseAddressId)=>{
+                                    AddressId = responseAddressId;
+                                    getFamilyId(AddressId).then((responseFamilyId)=>{
+                                        FamilyId = responseFamilyId;
+                                        getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
+                                            if(isParentAvailbel){
+                                                ParentId = isParentAvailbel;
+                                            }
+                                            let insMemberObj = {
+                                                FirstName:memberDetail.Name,
+                                                MiddleName:memberDetail.MiddleName,
+                                                Age:memberDetail.Age,
+                                                Gender:memberDetail.Gender,
+                                                VoterVotingId:memberDetail.VoterId,
+                                                FamilyId:FamilyId,
+                                                BoothId:boothId
+                                            }
+                                            if(memberDetail.Relationship.toLowerCase() === 'father'){
+                                                insMemberObj = {...insMemberObj,FatherId:ParentId}
+                                            } else {
+                                                insMemberObj = {...insMemberObj,SpouseId:ParentId}
+                                            }
+                                            checkMemberExistAndEnterDetails(insMemberObj).then((isMemberCreated)=>{
+                                                updateIndex = updateIndex + 1;
+                                                if(updateIndex >= dataArray.length) {
+                                                    resolve(true)
+                                                }
+                                            })
+                                        })
+                                    })
+                                    resolve(true)
+                                })
+                    }
+                })
+            } else {
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
         })
+
     })
 }
 // const insertBulkDataInDb = (dataArray) =>{

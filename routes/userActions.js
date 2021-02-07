@@ -21,15 +21,24 @@ const { Op } = db.Sequelize;
 const {addressMaster,familyMaster,voterMaster} = db
 router.post("/filterData", async (request, response) => {
     const req = request.body;
-    if (isDefined(req.sortingCreteria)) {
-        filterData(req.filterFields, req.sortingCreteria).then((result) => {
-            return response.send(result);
-        });
+    let tokenData = null;
+    await decodeDataFromAccessToken(request.headers.token).then((res) => {
+        tokenData = res;
+    });
+    if(tokenData === null){
+        return response.send([]);
     } else {
-        filterData(req.filterFields).then((result) => {
-            return response.send(result);
-        });
+        if (isDefined(req.sortingCreteria)) {
+            filterData(req.filterFields, req.sortingCreteria,tokenData.voterId).then((result) => {
+                return response.send(result);
+            });
+        } else {
+            filterData(req.filterFields,null,tokenData.voterId).then((result) => {
+                return response.send(result);
+            });
+        }
     }
+
 });
 router.get("/getRegionArray/", async (request, response) => {
     // const daughterStatus = ["SAMAJ DAUGHTER", "OUTSIDE SAMAJ DAUGHTER"];
@@ -176,38 +185,50 @@ router.get(
         }
         next();
     },
-    (req, res) => {
+    async (req, res) => {
         let offset = 0;
         let page = 0;
-        if (typeof req.query.page !== "undefined") {
-            if (parseInt(req.query.page) === 0) {
-                offset = 0;
-                page = 0;
-            } else if (parseInt(req.query.page) > 0) {
-                // eslint-disable-next-line radix
-                offset = (parseInt(req.query.page) - 1) * PAGE_LIMIT;
-                // eslint-disable-next-line no-unused-vars
-                page = req.query.page;
-            } else if (parseInt(req.query.page) === -1) {
-                offset = -1;
-                page = 0;
+        let tokenData = null;
+        await decodeDataFromAccessToken(req.headers.token).then((res) => {
+            if (res) {
+                tokenData = res;
             }
-        }
-        getMemberData(offset, page)
-            .then((members) => {
-                if (members.Data.length >= 0) {
-                    return res
-                        .status(200)
-                        .send({ data: members.Data, next_endpoint: members.next_endpoint });
+        });
+        if(tokenData === null){
+            return res
+                .status(202)
+                .send({ data: "data not found", next_endpoint: "null" });
+        } else {
+            if (typeof req.query.page !== "undefined") {
+                if (parseInt(req.query.page) === 0) {
+                    offset = 0;
+                    page = 0;
+                } else if (parseInt(req.query.page) > 0) {
+                    // eslint-disable-next-line radix
+                    offset = (parseInt(req.query.page) - 1) * PAGE_LIMIT;
+                    // eslint-disable-next-line no-unused-vars
+                    page = req.query.page;
+                } else if (parseInt(req.query.page) === -1) {
+                    offset = -1;
+                    page = 0;
                 }
-                return res
-                    .status(203)
-                    .send({ data: "data not found", next_endpoint: "null" });
-            })
-            .catch((err) => {
-                console.log(err)
-                res.status(202).send({ data: "data not found" });
-            });
+            }
+            getMemberData(offset, page,tokenData.voterId)
+                .then((members) => {
+                    if (members.Data.length >= 0) {
+                        return res
+                            .status(200)
+                            .send({ data: members.Data, next_endpoint: members.next_endpoint });
+                    }
+                    return res
+                        .status(203)
+                        .send({ data: "data not found", next_endpoint: "null" });
+                })
+                .catch((err) => {
+                    console.log(err)
+                    res.status(202).send({ data: "data not found" });
+                });
+        }
     }
 );
 
@@ -458,13 +479,22 @@ router.post("/searchMember", async (req, res) => {
     const charCheck = name.nameTxt.search(
         /^[A-Za-z0-9\(\)\-\=\+\.\`\~\?\!\@\#\$\%\^\&\*\ \)\(+\=\._-]+$/g
     );
-    if (charCheck === 0) {
-        searchData(name.nameTxt).then((result) => {
-            return res.send(result);
-        });
-    } else {
+    let tokenData = null;
+    await decodeDataFromAccessToken(req.headers.token).then((res) => {
+        tokenData = res;
+    });
+    if(tokenData === null){
         return res.send([]);
+    } else {
+        if (charCheck === 0) {
+            searchData(name.nameTxt,tokenData.voterId).then((result) => {
+                return res.send(result);
+            });
+        } else {
+            return res.send([]);
+        }
     }
+
 });
 
 

@@ -5,7 +5,7 @@ const {voterMasterRequest,addressMaster,occupationMaster,taskMaster,eventMaster,
 const {Op} = db.Sequelize
 const {sequelize} = require("../config/sequlize")
 const  {VOTER_ATTRIBUTES,DATABASE_NAME} = require("../handler/common/constants")
-const  {isDefined,filterComparador,mapComparador} = require("../handler/common/commonMethods")
+const  {getAllAdminMemberId,getAllVolunteerId,isDefined,filterComparador,mapComparador} = require("../handler/common/commonMethods")
 // const condition = { VoterId: { [Op.eq]: `${volunteerId}`},IsOurVolunteer: { [Op.eq]: '1'}};
 
 const getVolunteerTask = (volunteerId) =>{
@@ -231,8 +231,21 @@ const updateVolunteerBoothStatus = (data) =>{
 // }
 
 const getBoothWiseVoterList = (boothId,volunteerId) =>{
-    return new Promise((resolve)=>{
-        const condition = { BoothId: { [Op.eq]: boothId}};
+    return new Promise(async (resolve)=>{
+        let condition = { BoothId: { [Op.eq]: boothId}};
+        let volunteerCondition = null;
+        let tempVoterId = [volunteerId]
+        await getAllAdminMemberId().then((adminId)=>{
+            if(adminId){
+                tempVoterId.push(...adminId)
+            }
+        })
+        await getAllVolunteerId().then((volunteerId)=>{
+            if(volunteerId){
+                tempVoterId.push(...volunteerId)
+            }
+        })
+        condition = {...condition,VoterId: { [Op.notIn]: tempVoterId },}
         let tempMemberArray = [];
          voterMaster
             .findAll({
@@ -414,6 +427,95 @@ const makeRequestToChangeVoterDetail = (volunteerId,voterData) => {
 
     })
 }
+const makeRequestToChangeVoterDetailByAdmin = (voterData) => {
+    return new Promise((resolve)=>{
+        let insReqObj = {VoterId:voterData.updatingVoterId,BoothId:voterData.boothId}
+
+        if(isDefined(voterData.firstName)){
+            insReqObj = {...insReqObj,FirstName:voterData.firstName}
+        }
+        if(isDefined(voterData.profileImage)){
+            insReqObj = {...insReqObj,ProfileImage:voterData.profileImage}
+        }
+        if(isDefined(voterData.age)){
+            insReqObj = {...insReqObj,Age:voterData.age}
+        }
+        if(isDefined(voterData.lastName)){
+            insReqObj = {...insReqObj,MiddleName:voterData.lastName}
+        }
+        if(isDefined(voterData.email)){
+            insReqObj = {...insReqObj,Email:voterData.email}
+        }
+        if(isDefined(voterData.mobile)){
+            insReqObj = {...insReqObj,Mobile:voterData.mobile}
+        }
+
+        if(isDefined(voterData.dob)){
+            insReqObj = {...insReqObj,DOB:voterData.dob}
+        }
+        if(isDefined(voterData.familyId)){
+            insReqObj = {...insReqObj,FamilyId:voterData.familyId}
+        }
+        if(isDefined(voterData.voterId)){
+            insReqObj = {...insReqObj,VoterVotingId:voterData.voterId}
+        }
+
+        if(isDefined(voterData.gender)){
+            insReqObj = {...insReqObj,Gender:voterData.gender}
+        }
+        if(isDefined(voterData.isAlive)){
+            insReqObj = {...insReqObj,isAlive:voterData.isAlive}
+        }
+        if(isDefined(voterData.influencer)){
+            insReqObj = {...insReqObj,IsInfluencer:voterData.influencer}
+        }
+        if(isDefined(voterData.trustFactorId)){
+            insReqObj = {...insReqObj,TrustFactorId:voterData.trustFactorId}
+        }
+        if(isDefined(voterData.volunteer)){
+            insReqObj = {...insReqObj,IsOurVolunteer:voterData.volunteer}
+        }
+
+        const condition = { VoterId: { [Op.eq]: `${voterData.updatingVoterId}`}};
+        voterMaster.findOne({where:condition}).then(async (isRequestAlreadyCreated)=>{
+            if(isRequestAlreadyCreated){
+                await delete insReqObj.ByVolunteer
+                voterMaster
+                    .update(
+                        insReqObj,
+                        { where: condition }
+                    ).then((isRequestUpdated)=>{
+                    if(isRequestUpdated){
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log("error--",err)
+                    resolve(false)
+                })
+
+            } else {
+                voterMaster.create(insReqObj).then((isRequestCreated)=>{
+                    console.log(isRequestCreated)
+                    if(isRequestCreated){
+                        resolve(true)
+                    } else{
+                        resolve(false)
+                    }
+                }).catch((err)=>{
+                    console.log("error--",err)
+                    resolve(false)
+                })
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+
+    })
+}
+
+
 const getVolunteerChanges = (volunteerId) =>{
     return new Promise(async (resolve)=>{
         const condition = {ByVolunteer: { [Op.eq]: parseInt(volunteerId)},IsApproved: { [Op.eq]: 0}};
@@ -655,4 +757,4 @@ const acceptAllChangesToRealData = (data) =>{
 
     })
 }
-module.exports = {acceptAllChangesToRealData,getAllVolunteerRequest,implementVolunteerChangesToRealData,getVolunteerChanges,makeRequestToChangeVoterDetail,getBoothWiseVoterList,updateVolunteerBoothStatus,getBoothDetailRemainingForVolunteer,getBoothForVolunteer,getVolunteerTask,updateTaskInformation,getVolunteerList}
+module.exports = {makeRequestToChangeVoterDetailByAdmin,acceptAllChangesToRealData,getAllVolunteerRequest,implementVolunteerChangesToRealData,getVolunteerChanges,makeRequestToChangeVoterDetail,getBoothWiseVoterList,updateVolunteerBoothStatus,getBoothDetailRemainingForVolunteer,getBoothForVolunteer,getVolunteerTask,updateTaskInformation,getVolunteerList}

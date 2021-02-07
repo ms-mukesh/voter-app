@@ -5,7 +5,7 @@ const { Op } = db.Sequelize;
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const {isDefined,getAllVolunteer} = require("../handler/common/commonMethods")
 const {getEventInformationForDisplay,addNewEvent,getEventInformation} = require("../handler/event")
-const {acceptAllChangesToRealData,getAllVolunteerRequest,implementVolunteerChangesToRealData,getVolunteerChanges,makeRequestToChangeVoterDetail,getBoothWiseVoterList,updateVolunteerBoothStatus,getVolunteerTask,updateTaskInformation,getVolunteerList,getBoothForVolunteer,getBoothDetailRemainingForVolunteer} = require("../handler/volunteer")
+const {acceptAllChangesToRealData,getAllVolunteerRequest,implementVolunteerChangesToRealData,getVolunteerChanges,makeRequestToChangeVoterDetail,makeRequestToChangeVoterDetailByAdmin,getBoothWiseVoterList,updateVolunteerBoothStatus,getVolunteerTask,updateTaskInformation,getVolunteerList,getBoothForVolunteer,getBoothDetailRemainingForVolunteer} = require("../handler/volunteer")
 
 router.post(
     "/addNewEvent/",
@@ -274,17 +274,31 @@ router.post(
         if(tokenData === null){
             return res.status(201).send({ data: "in appropriate volunteer details" });
         }
-        console.log(data)
-        // return res.status(201).send({ data: "in appropriate volunteer details" });
-        makeRequestToChangeVoterDetail(tokenData.voterId,data).then((isRequestSaved)=>{
-            if(isRequestSaved){
-                return res.status(200).send({ data: "Request saved sucessfully.." });
-            } else {
+
+
+        if(req.body.role==='ADMIN'){
+            console.log("calledd")
+            makeRequestToChangeVoterDetailByAdmin(data).then((isRequestSaved)=>{
+                if(isRequestSaved){
+                    return res.status(200).send({ data: "Changes saved sucessfully.." });
+                } else {
+                    return res.status(201).send({ data: "Failed to save changes.." });
+                }
+            }).catch((err)=>{
+                return res.status(201).send({ data: "Failed to save changes.." });
+            })
+        } else {
+            makeRequestToChangeVoterDetail(tokenData.voterId,data).then((isRequestSaved)=>{
+                if(isRequestSaved){
+                    return res.status(200).send({ data: "Request saved sucessfully.." });
+                } else {
+                    return res.status(201).send({ data: "Failed to save request.." });
+                }
+            }).catch((err)=>{
                 return res.status(201).send({ data: "Failed to save request.." });
-            }
-        }).catch((err)=>{
-            return res.status(201).send({ data: "Failed to save request.." });
-        })
+            })
+        }
+
     }
 );
 

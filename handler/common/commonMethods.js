@@ -1,4 +1,5 @@
 const db = require("../../models");
+const {VOLUNTEER,NORMAL,ADMIN} = require("../common/constants")
 const {wardMaster,occupationMaster,trustFactorMaster,voterMaster,familyMaster,castMaster,nativePlaceMaster,addressMaster,adminMaster,notificationTypeMaster,notificationDetails} = db
 const { Op } = db.Sequelize;
 const loadash = require("lodash");
@@ -666,7 +667,7 @@ const getAllVolunteer = () => {
 };
 const getUserRole = (memberId) =>{
     return new Promise(async (resolve) => {
-        let role = "NORMAL";
+        let role = NORMAL;
         const conditionForTable = {
             VoterId: { [Op.eq]: `${memberId}` },
         };
@@ -688,14 +689,51 @@ const getUserRole = (memberId) =>{
             });
             if (
                 parseInt(members.dataValues.IsOurVolunteer) === 1 && members.dataValues.IsOurVolunteer!==null ) {
-                role = "VOLUNTEER";
+                role = VOLUNTEER;
                 return resolve(role);
             }
             return resolve(role);
         }
-        role = "ADMIN";
+        role = ADMIN;
         return resolve(role);
     });
+}
+const getAllAdminMemberId = () =>{
+    let adminIdArray = [];
+    return new Promise((resolve)=>{
+        adminMaster.findAll().then((data)=>{
+            if(data){
+                data.map((item)=>{
+                    adminIdArray.push(item.dataValues.VoterId)
+                })
+                resolve(adminIdArray)
+            } else{
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+    })
+}
+const getAllVolunteerId = () =>{
+    let volunteerIdArray = [];
+    let condition = {
+        IsOurVolunteer: { [Op.eq]: 1 },
+    };
+    return new Promise((resolve)=>{
+        voterMaster.findAll({where:condition}).then((data)=>{
+            if(data){
+                data.map((item)=>{
+                    volunteerIdArray.push(item.dataValues.VoterId)
+                })
+                resolve(volunteerIdArray)
+            } else{
+                resolve(false)
+            }
+        }).catch((err)=>{
+            resolve(false)
+        })
+    })
 }
 
 const getIdFromTable = (tableName, condition) => {
@@ -788,6 +826,8 @@ module.exports = {
     getAllVolunteerMemberId,
     getAllFemaleMemberId,
     getAllMaleMemberId,
-    getUserRole
+    getUserRole,
+    getAllAdminMemberId,
+    getAllVolunteerId
 };
 

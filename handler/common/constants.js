@@ -1,6 +1,7 @@
 const JWT_PRIVATE_KEY = "communityTopSecret";
 const NETWORK_FAILED_MESSAGE = 'Failed to login due to network issue';
 const DATA_NOT_FOUND_MESSAGE = 'Data not found';
+// const DATABASE_NAME = 'community_db';//apk-1
 const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
@@ -38,6 +39,10 @@ const VOLUNTEER_RECEIVER = 1;
 const ALL_RECEIVER = 2;
 const ALL_RECEIVER_MALE = 3;
 const ALL_RECEIVER_FEMALE = 4;
+const VOLUNTEER = 'VOLUNTEER';
+const ADMIN = 'ADMIN';
+const NORMAL = 'NORMAL';
+
 
 const NOTIFICATION_LIMIT = 30;
 const gender = ["MALE", "FEMALE"];
@@ -61,6 +66,7 @@ const VOTER_ATTRIBUTES = [
     "IsDaughterFamily",
     "SpouseId",
     "IsInfluencer",
+    "IsOurVolunteer",
     "VoterVotingId",
     "BoothId",
     "Age"
@@ -81,7 +87,10 @@ module.exports={
     VOLUNTEER_RECEIVER,
     ALL_RECEIVER_FEMALE,
     ALL_RECEIVER_MALE,
-    DATABASE_NAME
+    DATABASE_NAME,
+    VOLUNTEER,
+    ADMIN,
+    NORMAL
 
 }
 
