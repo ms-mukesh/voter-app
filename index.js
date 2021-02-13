@@ -10,6 +10,11 @@ const userActions = require("./routes/userActions")
 const notification = require("./routes/notificationRoute")
 const event = require("./routes/event")
 const volunteer = require("./routes/volunteer")
+const survey = require("./routes/survey");
+const {getSurveyReport} = require("./handler/survey")
+// getSurveyReport(1).then((res)=>{
+//   console.log(res)
+// })
 app.use(cors());
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
@@ -31,8 +36,9 @@ app.use("/userActions", userActions);
 app.use("/notification", notification);
 app.use("/event", event);
 app.use("/volunteer", volunteer);
+app.use("/survey", survey);
 
 
 app.listen(process.env.PORT || 3000, function(){
-    console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+    console.log("server listening on port %d in %s mode", this.address().port, app.settings.env);
 });

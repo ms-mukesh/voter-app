@@ -1,4 +1,4 @@
-const cenv = "liveClientTesting";
+const cenv = "localTesting";
 const env_var = {
     localTesting: {
         HOST: "localhost",

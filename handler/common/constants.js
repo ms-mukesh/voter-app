@@ -1,13 +1,20 @@
 const JWT_PRIVATE_KEY = "communityTopSecret";
 const NETWORK_FAILED_MESSAGE = 'Failed to login due to network issue';
 const DATA_NOT_FOUND_MESSAGE = 'Data not found';
-// const DATABASE_NAME = 'community_db';//apk-1
-const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
+const DATABASE_NAME = 'community_db';//apk-1
+// const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'heroku_0f888c1c6017d15';//apk-1
 // const DATABASE_NAME = 'community_db';//local testing
-const PAGE_LIMIT=30
+const PAGE_LIMIT=30;
+const defaultQuestion = [
+    {Question:"What is Voter Phone Number"},
+    {Question:"What is Voter Demand"},
+    {Question:"What is Voter Main Issue He is facing"},
+    {Question:"What is Voter Opinion"},
+    {Question:"What is Voter Thinking about our candidate"},
+    ]
 const monthArray = [
     "January",
     "February",
@@ -90,7 +97,8 @@ module.exports={
     DATABASE_NAME,
     VOLUNTEER,
     ADMIN,
-    NORMAL
+    NORMAL,
+    defaultQuestion
 
 }
 
