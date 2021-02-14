@@ -14,19 +14,19 @@ const AddressMaster = sequelize.define(
         },
         CityOrVillageName: {
             type: Sequelize.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         DistrictName:{
             type: Sequelize.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         StateName: {
             type: Sequelize.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         CountryName: {
             type: Sequelize.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         Phone1: {
             type: Sequelize.STRING,

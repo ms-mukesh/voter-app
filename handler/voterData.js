@@ -544,9 +544,7 @@ const getAllMembers = async (offset, pageNo,memberId) => {
                 })
             }
     })
-    // condition = {
-    //     VoterId: { [Op.notIn]: tempVoterId },
-    // };
+
     await voterMaster
         .findAll({
             offset: offset + pageLimit,
@@ -626,8 +624,8 @@ const getAllMembers = async (offset, pageNo,memberId) => {
                     ],
                 },
             ],
-            // offset,
-            // limit: pageLimit,
+            offset,
+            limit: pageLimit,
         })
         .then(async (res) => {
             if (res.length >= 0) {
@@ -646,35 +644,130 @@ const getAllMembers = async (offset, pageNo,memberId) => {
         return { Data: tempMemberArray, next_endpoint: nextUrl };
     }
     return { Data: tempMemberArray, next_endpoint: nextUrl };
-    // getUserRole(memberId).then(async (userRole)=>{
-    //     if(userRole === VOLUNTEER){
-    //          volunteerCondition = {
-    //              VolunteerId: { [Op.eq]: memberId },
-    //         };
-    //          volunteer_booth.findAll({
-    //              attributes:['BoothId'],
-    //              where:volunteerCondition
-    //          }).then((volunteerBoothData)=>{
-    //              if(volunteerBoothData){
-    //                  volunteerBoothData.map((item)=>{
-    //                      tempBoothId.push(item.dataValues.BoothId)
-    //                  })
-    //                  condition = {
-    //                      ...condition,
-    //                      BoothId: { [Op.in]: tempBoothId },
-    //                  };
-    //              }
-    //          })
-    //
-    //     } else if(userRole === ADMIN){
-    //
-    //     } else {
-    //
-    //     }
-    //
-    // }).catch((err)=>{
-    //     return { Data: [], next_endpoint: nextUrl };
-    // })
+};
+const getAllInclunecerMembers = async (memberId) => {
+    let tempMemberArray = [];
+    let tempVoterId = [memberId]
+    let tempBoothId = []
+    let condition = {
+        VoterId: { [Op.notIn]: tempVoterId },
+        IsInfluencer: { [Op.eq]: 1 },
+    };
+    let volunteerCondition = null;
+    await getAllAdminMemberId().then((adminId)=>{
+        if(adminId){
+            tempVoterId.push(...adminId)
+        }
+    })
+    await getUserRole(memberId).then(async (userRole)=>{
+        if(userRole === VOLUNTEER){
+            volunteerCondition = {
+                VolunteerId: { [Op.eq]: memberId },
+            };
+            await volunteer_booth.findAll({
+                attributes:['BoothId'],
+                where:volunteerCondition
+            }).then((volunteerBoothData)=>{
+                if(volunteerBoothData){
+                    volunteerBoothData.map((item)=>{
+                        tempBoothId.push(item.dataValues.BoothId)
+                    })
+                    condition = {
+                        ...condition,
+                        BoothId: { [Op.in]: tempBoothId },
+                    };
+                }
+            })
+            await getAllVolunteerId().then((volunteerId)=>{
+                if(volunteerId){
+                    tempVoterId.push(...volunteerId)
+                }
+            })
+        }
+    })
+    await voterMaster
+        .findAll({
+            attributes: VOTER_ATTRIBUTES,
+            where:condition,
+            order: [
+                [
+                    sequelize.fn(
+                        "concat",
+                        sequelize.col("VoterMaster.FirstName"),
+                        sequelize.col("VoterMaster.MiddleName"),
+                        sequelize.col("VoterMaster.LastName")
+                    ),
+                    "ASC",
+                ],
+            ],
+            include: [
+                {
+                    attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
+                    model: voterMaster,
+                    as: "MotherEntry",
+                },
+                {
+                    attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
+                    model: voterMaster,
+                    as: "SpouseEntry",
+                },
+                {
+                    attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
+                    model: voterMaster,
+                    as: "FatherEntry",
+                },
+                {
+                    attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
+                    model: voterMaster,
+                    as: "FatherInLawDetail",
+                },
+                {
+                    attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
+                    model: voterMaster,
+                    as: "MotherInLawDetail",
+                },
+                {
+                    attributes: ["Name"],
+                    model: occupationMaster,
+                    // as: "OccupationDetail",
+                },
+                {
+                    attributes: ["TrustFactorId","Name","Color","ExtraMessage"],
+                    model: trustFactorMaster,
+                    // as: "OccupationDetail",
+                },
+                {
+                    attributes: ["FamilyId", "HeadId"],
+                    model: familyMaster,
+                    include: [
+                        {
+                            model: addressMaster,
+                        },
+                        {
+                            attributes: ["Name"],
+                            model: nativePlaceMaster,
+                        },
+                    ],
+                },
+            ],
+        })
+        .then(async (res) => {
+            if (res.length >= 0) {
+                tempMemberArray.push(res);
+                return {
+                    Data: tempMemberArray,
+                    next_endpoint: nextUrl,
+                };
+            }
+        })
+        .catch((err) => {
+            console.log("error--",err)
+            return { Data: tempMemberArray, next_endpoint: nextUrl };
+        });
+    if (tempMemberArray.length !== 0) {
+        return { Data: tempMemberArray, next_endpoint: nextUrl };
+    }
+    return { Data: tempMemberArray, next_endpoint: nextUrl };
 };
 const searchData = async (searchKey,memberId) => {
     // eslint-disable-next-line no-async-promise-executor,no-unused-vars
@@ -4688,5 +4781,6 @@ module.exports = {
     getStateNameFromCountry,
     getCountryCode,
     getEventInformation,
-    getSpecificMemberDetail
+    getSpecificMemberDetail,
+    getAllInclunecerMembers
 };

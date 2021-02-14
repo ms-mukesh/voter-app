@@ -8,24 +8,31 @@ const WardMasterModel = sequelize.define("WardMaster", {
     },
     WardName: {
         type: Sequelize.STRING,
+        allowNull: true
     },
     WardAddress : {
         type: Sequelize.STRING,
+        allowNull: true
     },
     WardCity:{
         type: Sequelize.STRING,
+        allowNull: true
     },
     DistrictName:{
         type: Sequelize.STRING,
+        allowNull: true
     },
     WardState:{
         type: Sequelize.STRING,
+        allowNull: true
     },
     SecurityLevelOnWard: {
         type: Sequelize.STRING,
+        allowNull: true
     },
     WardCode:{
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: true
     }
 
 },{

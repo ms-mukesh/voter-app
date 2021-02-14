@@ -1,4 +1,4 @@
-const {insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
+const {getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const loadash = require("lodash")
@@ -810,7 +810,7 @@ router.post("/insertNewBooth", async (req,res,next)=>{
     next();
 },async (req, res) => {
     insertNewBooth(req.body).then((isAdded)=>{
-        if(isAdded){
+        if(isAdded){insertNewBooth
             return res.status(200).send({data:isAdded})
         } else {
             return res.status(201).send({data:"fail to add"})
@@ -818,6 +818,26 @@ router.post("/insertNewBooth", async (req,res,next)=>{
     }).catch((err)=>{
         return res.status(201).send({data:"fail to add"})
     })
+});
+router.get("/getAllInfluneceMembers", async (req, res) => {
+    let tokenData = null;
+    await decodeDataFromAccessToken(req.headers.token).then((res) => {
+        tokenData = res;
+    });
+    if(tokenData === null){
+        return res.status(201).send({data:"no data found"});
+    } else {
+        getAllInclunecerMembers(tokenData.voterId).then((data)=>{
+            if(data){
+                return res.status(200).send({data:data});
+            } else {
+                return res.status(201).send({data:"no data found"});
+            }
+        }).catch((err)=>{
+            return res.status(201).send({data:"no data found"});
+        })
+    }
+
 });
 
 
