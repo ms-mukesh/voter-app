@@ -66,8 +66,9 @@ const sendMultipleNotification = async (
         await getAdminMemberId().then((res) => {
             if (res) {
                 res.map((item) => {
-                    if (receiveArray.indexOf(item.dataValues.VoterId) < 0) {
-                        receiveArray.push(item.dataValues.VoterId);
+                    console.log(item)
+                    if (receiveArray.indexOf(item.dataValues.AdminId) < 0) {
+                        receiveArray.push(item.dataValues.AdminId);
                     }
                 });
                 console.log(receiveArray)
@@ -83,10 +84,10 @@ const sendMultipleNotification = async (
                     }
                 });
             }
+
         });
     }
     if (receiverType.includes(ALL_RECEIVER)) {
-
         await getAllMemberId().then((res) => {
             if (res) {
                 res.map((item) => {
