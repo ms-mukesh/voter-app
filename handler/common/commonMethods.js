@@ -193,7 +193,10 @@ const fetchAllBoothName = () =>{
                 }
                 await res.map((data) => {
                     tempData = data.dataValues;
-                    tempDataArray.push(tempData.WardName);
+                    if(tempData.WardName!==null && tempData.WardName!=='' ){
+                        tempDataArray.push(tempData.WardName);
+                    }
+
                 });
                 const obj = {
                     BoothName: tempDataArray,
@@ -445,20 +448,16 @@ const fetchAllRegion = () => {
                     regionData.StateName !== "-" &&
                     regionData.StateName !== "" &&
                     regionData.StateName !== null &&
-                    regionData.StateName.length > 0 &&
                     states.push(regionData.StateName);
                     regionData.CountryName !== "-" &&
                     regionData.CountryName !== "" &&
                     regionData.CountryName !== null &&
-                    regionData.CountryName.length > 0 &&
                     country.push(regionData.CountryName);
                     regionData.CityOrVillageName !== "-" &&
-                    regionData.CityOrVillageName.length > 0 &&
                     regionData.CityOrVillageName !== "" &&
                     regionData.CityOrVillageName !== null &&
                     cities.push(regionData.CityOrVillageName);
                     regionData.DistrictName !== "-" &&
-                    regionData.DistrictName.length > 0 &&
                     regionData.DistrictName !== "" &&
                     regionData.DistrictName !== null &&
                     district.push(regionData.DistrictName);
