@@ -34,4 +34,5 @@ db.volunteer_election = require("./volunteer_election.model");
 db.survey_master = require("./surveyMaster.Model");
 db.survey_question_master = require("./surveyQuestionMaster.model");
 db.survey_answer_master = require("./survey_answer_master.model");
+db.polling_booth_master = require("./pollingBoothMaster.model");
 module.exports = db;

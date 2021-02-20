@@ -9,6 +9,7 @@ const trustFactorMaster = require("./trustFactor.model");
 const familyRoleMaster = require("./familyRoleMaster.model");
 const vidhanSabhaMaster = require("./vidhanSabhaMaster.model");
 const boothMaster = require("./wardMaster.model");
+const pollingStationMaster = require("./pollingBoothMaster.model");
 
 
 
@@ -125,6 +126,10 @@ const VoterMaster = sequelize.define(
             type: Sequelize.STRING,
             allowNull: true,
         },
+        VoterHindiName: {
+            type: Sequelize.STRING,
+            allowNull: true,
+        },
         GenerationLevel : {
             type: Sequelize.INTEGER,
             allowNull: true,
@@ -187,5 +192,8 @@ VoterMaster.belongsTo(vidhanSabhaMaster, {
 });
 VoterMaster.belongsTo(boothMaster, {
     foreignKey: "BoothId",
+});
+VoterMaster.belongsTo(pollingStationMaster, {
+    foreignKey: "PollingStationId",
 });
 module.exports = VoterMaster;

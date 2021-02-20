@@ -1,18 +1,18 @@
 const { Sequelize, sequelize } = require("../config/sequlize");
 
-const VidhanSabhaMaster = sequelize.define(
-    "VidhanSabhaMaster",
+const PollingBoothMaster = sequelize.define(
+    "PollingBoothMaster",
     {
-        VidhanSabhaId: {
+        PollingBoothStationId: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
         },
-        VidhanSabhaName:{
+        PollingBoothName:{
             type: Sequelize.STRING,
             allowNull: false,
         },
-        VidhanSabhaCode:{
+        PollingBoothCode:{
             type: Sequelize.STRING,
             allowNull: true,
         },
@@ -56,9 +56,9 @@ const VidhanSabhaMaster = sequelize.define(
         indexes: [
             {
                 unique: false,
-                fields: ["VidhanSabhaId"],
+                fields: ["PollingBoothStationId"],
             },
         ],
     }
 );
-module.exports = VidhanSabhaMaster;
+module.exports = PollingBoothMaster;

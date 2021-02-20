@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../models");
+const fetch = require('node-fetch');
+
 const { Op } = db.Sequelize;
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const {isDefined,getAllVolunteer} = require("../handler/common/commonMethods")
 const {getEventInformationForDisplay,addNewEvent,getEventInformation} = require("../handler/event")
 const {acceptAllChangesToRealData,getAllVolunteerRequest,implementVolunteerChangesToRealData,getVolunteerChanges,makeRequestToChangeVoterDetail,makeRequestToChangeVoterDetailByAdmin,getBoothWiseVoterList,updateVolunteerBoothStatus,getVolunteerTask,updateTaskInformation,getVolunteerList,getBoothForVolunteer,getBoothDetailRemainingForVolunteer} = require("../handler/volunteer")
+const https = require('https')
 
 router.post(
     "/addNewEvent/",
@@ -384,6 +387,35 @@ router.post(
         }).catch((err)=>{
             return res.status(201).send({ data: "No changes Found for this volunteer.." });
         })
+    }
+);
+
+router.get(
+    "/eceuteRazorReq",(req,res,next)=>{
+        next();
+    },
+    async (req, res) => {
+        console.log("called")
+        var options = {
+            host: "http://192.168.42.194:3000",
+            method: 'POST'
+        };
+
+        const data = {
+            "amount": 100,
+            "currency": "INR",
+            "receipt": "order_rcptid_11"
+        }
+        let headers = new fetch.Headers();
+        headers.set('Authorization', 'Basic ' + base64.encode('rzp_live_t67U0BoWeFiPpO' + ":" + '7lIb1BrxQvhZ6rJEFoZfEYMQ'));
+        fetch('https://api.razorpay.com/v1/orders',{ method: 'POST', headers: headers, body: data})
+            .then((data)=>{
+                console.log(data)
+             return res.send(data)
+         }).catch((err)=>{
+             console.log(err)
+        })
+
     }
 );
 module.exports = router;

@@ -16,6 +16,7 @@ const {getAllAdminMemberId,getAllVolunteerId,getUserRole,getMonthFromString,isDe
 const { fromPath } = require("pdf2pic")
 const uuid = require("uuid-v4");
 const { Storage } = require("@google-cloud/storage");
+const {removeDuplicates} = require("../handler/common/commonMethods")
 // eslint-disable-next-line import/order
 //select * from community_db.VoterMaster where BoothId in(SELECT BoothId FROM community_db.Volunteer_Booth where VolunteerId = 8);
 
@@ -30,7 +31,6 @@ let pageLimit = PAGE_LIMIT;
 const db = require("../models");
 
 const { sequelize } = require("../config/sequlize");
-
 const { Op } = db.Sequelize;
 const {
   voterMaster,
@@ -50,28 +50,14 @@ const {
     election_voter,
     electionMaster,
     volunteer_election,
-    volunteer_booth
+    volunteer_booth,
+    polling_booth_master,
+    vidhanSabhaMaster
 } = db;
 
 let lastPage = 0;
 let totalMembers = 0;
-// const tempArray=[
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-//     {"VoterVotingId":"","FirstName":"","MiddleName":"","Relation":"","Age":"","Gender":"","RoomNo":"","Address":""}
-// ]
-const tempArray=[
-    {"VoterVotingId":"RJ/25/194/078352","FirstName":"Brijmohan","MiddleName":"Ratanlal","Relation":"Father","Age":"48","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-    {"VoterVotingId":"MTW1184191","FirstName":"Pawan","MiddleName":"Brijmohan","Relation":"Husband","Age":"50","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-    {"VoterVotingId":"ABZBO917542","FirstName":"Vinod","MiddleName":"Omprakash","Relation":"Father","Age":"41","Gender":"Male","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-    {"VoterVotingId":"AZB0917534","FirstName":"Munni Devi","MiddleName":"Vinod","Relation":"Husband","Age":"38","Gender":"Female","RoomNo":"1","Address":"Bus stand, Khatukhurd"},
-    {"VoterVotingId":"AZB0800276","FirstName":"Sugani Devi","MiddleName":"Omprakash","Relation":"Husband","Age":"70","Gender":"Female","RoomNo":"2","Address":"Bus stand, Khatukhurd"},
-    {"VoterVotingId":"RJ/25/194/078525","FirstName":"Sundar","MiddleName":"Bheruram","Relation":"Husband","Age":"81","Gender":"Female","RoomNo":"2","Address":"Bus stand, Khatukhurd"}
-]
-
+const tempArray = [{"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 75, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "CHHOTU RAM ", "RelationName2": "छोटू राम ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 1, "VoterId": "AZB1038934", "VoterName": "बजरंग लाल ", "VoterNameEn": "BAJRANG LAL ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 68, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJRANG LAL ", "RelationName2": "बजरंग लाल ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 2, "VoterId": "AZB1038900", "VoterName": "केशर देवी ", "VoterNameEn": "KESHAR DEVI ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 44, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GUMANA RAM ", "RelationName2": "गुमाना राम  ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 3, "VoterId": "AZB1038868", "VoterName": "भंवरी देवी ", "VoterNameEn": "BHANWARI DEVI ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 42, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NANUKHAN ", "RelationName2": "नानूखां ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 4, "VoterId": "MTW1702711", "VoterName": "विनोददेवी ", "VoterNameEn": "VINODADEVI ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 30, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BABUKHAN ", "RelationName2": "बाबूखान ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 5, "VoterId": "AZB0311282", "VoterName": "महबुब खान ", "VoterNameEn": "MAHABUB KHAN ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 28, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BABU KHAN ", "RelationName2": "बाबू खाँ ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 6, "VoterId": "MTW1036755", "VoterName": "सायरी देवी ", "VoterNameEn": "SAYARI DEVI ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MAHBUB KHAN ", "RelationName2": "महबुब खान ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 7, "VoterId": "AZB0863241", "VoterName": "तबसुम बानो ", "VoterNameEn": "TABSUM BANO ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 23, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BABU KHAN ", "RelationName2": "बाबु खान ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 8, "VoterId": "AZB0863233", "VoterName": "असलम खान ", "VoterNameEn": "ASLAM KHAN ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 45, "HouseNo": "02", "HouseNoEN": "02", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BUDHE KHAN ", "RelationName2": "बुधे खान ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 9, "VoterId": "AZB1126184", "VoterName": "नानू खान ", "VoterNameEn": "NANU KHAN ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 29, "HouseNo": "02", "HouseNoEN": "02", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "ASHLAM KHAN ", "RelationName2": "असलम खान ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 10, "VoterId": "AZB1126507", "VoterName": "रहीसा ", "VoterNameEn": "RAHISA ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 65, "HouseNo": "3", "HouseNoEN": "3", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SAVANTASINGH ", "RelationName2": "सावंतसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 11, "VoterId": "RJ/25/194/018301", "VoterName": "बजरंगसिंह ", "VoterNameEn": "BAJARANGASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 33, "HouseNo": "3", "HouseNoEN": "3", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJARANG SINGH ", "RelationName2": "बजरंग सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 12, "VoterId": "AZB0111245", "VoterName": "बलवीर सिंह ", "VoterNameEn": "BALAVIR SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 28, "HouseNo": "3", "HouseNoEN": "3", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BALAVIR SINGH ", "RelationName2": "बलवीर सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 13, "VoterId": "AZB0407759", "VoterName": "मधुबाला ", "VoterNameEn": "MADHUBALA ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 54, "HouseNo": "4", "HouseNoEN": "4", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BHAGIRATHASINGH ", "RelationName2": "भागीरथसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 14, "VoterId": "RJ/25/194/018002", "VoterName": "अन्तरकवर ", "VoterNameEn": "ANTARAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 39, "HouseNo": "4", "HouseNoEN": "4", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BHAGIRATHASINGH ", "RelationName2": "भागीरथसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 15, "VoterId": "MTW1482348", "VoterName": "गोपालसिंह ", "VoterNameEn": "GOPALASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 33, "HouseNo": "4", "HouseNoEN": "4", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GOPALASINGH ", "RelationName2": "गोपालसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 16, "VoterId": "AZB0455113", "VoterName": "प्रदीप कंवर ", "VoterNameEn": "PRADIP KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 28, "HouseNo": "4", "HouseNoEN": "4", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BHAGIRATH SINGH ", "RelationName2": "भागीरथ सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 17, "VoterId": "AZB0277574", "VoterName": "उपेन्द्र सिंह ", "VoterNameEn": "UPENDRA SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 57, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SHIVADANASINGH ", "RelationName2": "शिवदानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 18, "VoterId": "MTW1395888", "VoterName": "केशरसिंह ", "VoterNameEn": "KESHARASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 54, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESHARASINGH ", "RelationName2": "केशरसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 19, "VoterId": "RJ/25/194/018012", "VoterName": "गेनकवर ", "VoterNameEn": "GENAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 31, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESHARASINGH ", "RelationName2": "केशरसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 20, "VoterId": "AZB0261354", "VoterName": "मूलसिंह ", "VoterNameEn": "MULASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 29, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MUL SINGH ", "RelationName2": "मुल सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 21, "VoterId": "AZB0629303", "VoterName": "लक्ष्मी कंवर ", "VoterNameEn": "LAKSHMI KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESHAR SINGH ", "RelationName2": "केशर सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 22, "VoterId": "AZB0312439", "VoterName": "छिगन सिंह ", "VoterNameEn": "CHHIGAN SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 22, "HouseNo": "5", "HouseNoEN": "5", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESR SINGH  ", "RelationName2": "केसर सिंह  ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 23, "VoterId": "AZB0863324", "VoterName": "पारस कँवर  ", "VoterNameEn": "PARS KANVAR  ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 67, "HouseNo": "6", "HouseNoEN": "6", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BHAVARASINGH ", "RelationName2": "भवरसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 24, "VoterId": "RJ/25/194/018036", "VoterName": "मगनकवर ", "VoterNameEn": "MAGANAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 46, "HouseNo": "6", "HouseNoEN": "6", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESHARASINGH ", "RelationName2": "केशरसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 25, "VoterId": "RJ/25/194/018447", "VoterName": "हीरकवर ", "VoterNameEn": "HIRAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 44, "HouseNo": "6", "HouseNoEN": "6", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BHANVARASINGH ", "RelationName2": "भंवरसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 26, "VoterId": "AZB0180927", "VoterName": "मोतीसिंह ", "VoterNameEn": "MOTISINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 39, "HouseNo": "6", "HouseNoEN": "6", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MOTISINGH ", "RelationName2": "मोतीसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 27, "VoterId": "AZB0180919", "VoterName": "सुदेशकंवर ", "VoterNameEn": "SUDESHAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 20, "HouseNo": "6", "HouseNoEN": "6", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KESR SINGH  ", "RelationName2": "केसर सिंह  ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 28, "VoterId": "AZB0863316", "VoterName": "अनिता कँवर  ", "VoterNameEn": "ANITA KANVAR  ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 64, "HouseNo": "7", "HouseNoEN": "7", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SAMANASINGH ", "RelationName2": "समानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 29, "VoterId": "AZB0144337", "VoterName": "हरिसिंह ", "VoterNameEn": "HARISINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 63, "HouseNo": "7", "HouseNoEN": "7", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "HARISINGH ", "RelationName2": "हरिसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 30, "VoterId": "AZB0144345", "VoterName": "गिरघरकवर ", "VoterNameEn": "GIRAGHARAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "7", "HouseNoEN": "", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "HARISINGH RATHAUD ", "RelationName2": "हरिसिंह राठौड .", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 31, "VoterId": "AZB0680355", "VoterName": "योगिराज सिंह राठौड .", "VoterNameEn": "YOGIRAJ SINGH RATHAUD ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 23, "HouseNo": "7", "HouseNoEN": "7", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "HARI SINGH ", "RelationName2": "हरि सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 32, "VoterId": "AZB0863159", "VoterName": "चेतनाराज ", "VoterNameEn": "CHETNARAJ ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 56, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SAMAN SINGH ", "RelationName2": "समान सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 33, "VoterId": "AZB0261362", "VoterName": "विक्रम सिंह ", "VoterNameEn": "VIKRAM SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 52, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SAMANASINGH ", "RelationName2": "समानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 34, "VoterId": "RJ/25/194/018434", "VoterName": "नरेन्द्रसिंह ", "VoterNameEn": "NARENDRASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 51, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "SAMANASINGH ", "RelationName2": "समानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 35, "VoterId": "AZB0112078", "VoterName": "राजेन्द्रसिंह ", "VoterNameEn": "RAJENDRASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 51, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "VIKRAMASINGH ", "RelationName2": "विक्रमसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 36, "VoterId": "MTW1702943", "VoterName": "चांदकंवर ", "VoterNameEn": "CHANDAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 49, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NARENDRASINGH ", "RelationName2": "नरेन्द्रसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 37, "VoterId": "MTW1482355", "VoterName": "विनोदकंवर ", "VoterNameEn": "VINODAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 49, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "RAJEDRANSINGH ", "RelationName2": "राजेद्रंसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 38, "VoterId": "RJ/25/194/018080", "VoterName": "बसुकवर ", "VoterNameEn": "BASUKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 34, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "VIKRAM SINGH ", "RelationName2": "विक्रम सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 39, "VoterId": "AZB0261388", "VoterName": "विनोद सिंह ", "VoterNameEn": "VINOD SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 34, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "VIKRAM SINGH ", "RelationName2": "विक्रम सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 40, "VoterId": "AZB0995845", "VoterName": "भंवर विनोद सिंह जोधा ", "VoterNameEn": "BHANVAR VINOD SINGH JODHA ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 32, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "VIKRAM SINGH ", "RelationName2": "विक्रम सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 41, "VoterId": "AZB0112060", "VoterName": "महेन्द्र सिंह ", "VoterNameEn": "MAHENDRA SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 30, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "narendra singh rathore ", "RelationName2": "नरेन्द्र सिंह राठौड़ ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 42, "VoterId": "AZB0112219", "VoterName": "गिरवर सिंह राठौड़ ", "VoterNameEn": "girwar singh rathore ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 30, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "RAJENDRA SINGH ", "RelationName2": "राजेन्द्र सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 43, "VoterId": "AZB0507681", "VoterName": "समदर सिंह ", "VoterNameEn": "SAMADAR SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 30, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "VIKRAMASINGH ", "RelationName2": "विक्रमसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 44, "VoterId": "AZB0261370", "VoterName": "महीपाल सिंह ", "VoterNameEn": "MAHIPAL SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 30, "HouseNo": "8", "HouseNoEN": "8", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NARPAT SINGH ", "RelationName2": "नरपत सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 45, "VoterId": "AZB0832907", "VoterName": "सुमन कंवर ", "VoterNameEn": "SUMAN KANWAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "08", "HouseNoEN": "08", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NARENDRA SINGH ", "RelationName2": "नरेन्द्र सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 46, "VoterId": "AZB0312405", "VoterName": "मुकेश सिंह ", "VoterNameEn": "MUKESH SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 105, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KANASINGH ", "RelationName2": "कानसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 47, "VoterId": "RJ/25/194/018108", "VoterName": "केशर कंवर ", "VoterNameEn": "KESHAR KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 63, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KANASINGH ", "RelationName2": "कानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 48, "VoterId": "MTW1702240", "VoterName": "मदनसिंह ", "VoterNameEn": "MADANASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 59, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MADANASINGH ", "RelationName2": "मदनसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 49, "VoterId": "RJ/25/194/018098", "VoterName": "रुकमीणी कँवर ", "VoterNameEn": "RUKMINI KANWAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 52, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "DEVI SINGH ", "RelationName2": "देवी सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 50, "VoterId": "RJ/25/194/018449", "VoterName": "सन्तोषकवर ", "VoterNameEn": "SANTOSHAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 49, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KANASINGH ", "RelationName2": "कानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 51, "VoterId": "MTW3514866", "VoterName": "देवी सिंह ", "VoterNameEn": "DEVI SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 42, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MADANASINGH ", "RelationName2": "मदनसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 52, "VoterId": "MTW1395896", "VoterName": "रामावतारसिंह ", "VoterNameEn": "RAMAVATARASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 39, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MADANASINGH ", "RelationName2": "मदनसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 53, "VoterId": "MTW1038504", "VoterName": "अर्जुनसिंह ", "VoterNameEn": "ARJUNASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 33, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "RAMAVATARASINGH ", "RelationName2": "रामावतारसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 54, "VoterId": "MTW1702307", "VoterName": "विनोदकंवर ", "VoterNameEn": "VINODAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 32, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "ARJUN SINGH ", "RelationName2": "अर्जुन सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 55, "VoterId": "AZB0111864", "VoterName": "विद्युत कंवर ", "VoterNameEn": "VIDHYUT KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "DEVISINGH ", "RelationName2": "देवीसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 56, "VoterId": "AZB0454959", "VoterName": "किशोरसिंह ", "VoterNameEn": "KISHORASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 21, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "DEVI SINGH ", "RelationName2": "देवी सिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 57, "VoterId": "AZB1069855", "VoterName": "अशोक कुमार ", "VoterNameEn": "ASHOK KUMAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 25, "HouseNo": "9", "HouseNoEN": "9", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KISHOR SINGH ", "RelationName2": "किशोर सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 58, "VoterId": "AZB1119841", "VoterName": "संतोष कंवर ", "VoterNameEn": "SANTOSH KANWAR ", "contactno": "9887532929"}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 87, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MANASINGH ", "RelationName2": "मानसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 59, "VoterId": "RJ/25/194/018179", "VoterName": "भवर कंवर ", "VoterNameEn": "BHAVAR KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 87, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "KHUMANASINGH ", "RelationName2": "खुमाणसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 60, "VoterId": "MTW1036771", "VoterName": "प्रहलादसिंह ", "VoterNameEn": "PRAHALADASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 82, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "PRAHALADASINGH ", "RelationName2": "प्रहलादसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 61, "VoterId": "MTW1036789", "VoterName": "मोहनकवर ", "VoterNameEn": "MOHANAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 81, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NARAPATASINGH ", "RelationName2": "नरपतसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 62, "VoterId": "RJ/25/194/018197", "VoterName": "भवर कंवर ", "VoterNameEn": "BHAVAR KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 66, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MANASINGH ", "RelationName2": "मानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 63, "VoterId": "RJ/25/194/018140", "VoterName": "बजरंगसिंह ", "VoterNameEn": "BAJARANGASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 66, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJARANGASINGH ", "RelationName2": "बजरंगसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 64, "VoterId": "RJ/25/194/018159", "VoterName": "मेनकवर ", "VoterNameEn": "MENAKAVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 60, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MANASINGH ", "RelationName2": "मानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 65, "VoterId": "MTW1395912", "VoterName": "अनोपसिंह ", "VoterNameEn": "ANOPASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 58, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "PRAHALAD SIH ", "RelationName2": "प्रहलाद सिह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 66, "VoterId": "AZB0111849", "VoterName": "बहादुर सिंह ", "VoterNameEn": "BAHADUR SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 57, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "ANOPASINGH ", "RelationName2": "अनोपसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 67, "VoterId": "MTW1395904", "VoterName": "रामकंवर ", "VoterNameEn": "RAMAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 56, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MANASINGH ", "RelationName2": "मानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 68, "VoterId": "AZB0011916", "VoterName": "गोविन्दसिंह ", "VoterNameEn": "GOVINDASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 53, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MANASINGH ", "RelationName2": "मानसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 69, "VoterId": "RJ/25/194/018119", "VoterName": "नन्दसिंह ", "VoterNameEn": "NANDASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 53, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAHADURASINGH ", "RelationName2": "बहादुरसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 70, "VoterId": "AZB0371906", "VoterName": "रेवन्तकंवर ", "VoterNameEn": "REVANTAKANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 52, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GOVINDASINGH ", "RelationName2": "गोविन्दसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 71, "VoterId": "RJ/25/194/018122", "VoterName": "सोहन कंवर ", "VoterNameEn": "SOHAN KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 50, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "NANDASINGH ", "RelationName2": "नन्दसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 72, "VoterId": "RJ/25/194/018128", "VoterName": "मगन कंवर ", "VoterNameEn": "MAGAN KANVAR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 42, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GIRAGHARISINGH ", "RelationName2": "गिरघारीसिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 73, "VoterId": "AZB0111856", "VoterName": "सरला कंवर ", "VoterNameEn": "Sarala Kakawar ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 42, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJARANGASINGH ", "RelationName2": "बजरंगसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 74, "VoterId": "RJ/25/194/018133", "VoterName": "प्रकाशसिंह ", "VoterNameEn": "PRAKASHASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 39, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJARANGASINGH ", "RelationName2": "बजरंगसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 75, "VoterId": "MTW1038512", "VoterName": "अर्जुन सिंह ", "VoterNameEn": "ARJUN SINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 39, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GOVINDASINGH ", "RelationName2": "गोविन्दसिंह ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 76, "VoterId": "MTW1038520", "VoterName": "दलीपसिंह ", "VoterNameEn": "DALIPASINGH ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 33, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "DALIP SINGH ", "RelationName2": "दलीप सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 77, "VoterId": "AZB0012203", "VoterName": "विमला कवंर ", "VoterNameEn": "VIMALA KAVANR ", "contactno": ""}, {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 33, "HouseNo": "10", "HouseNoEN": "10", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "PRAKASH SINGH ", "RelationName2": "प्रकाश सिंह ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 78, "VoterId": "AZB0012211", "VoterName": "सुमन कंवर ", "VoterNameEn": "SUMAN KANVAR ", "contactno": ""}]
 const filterData = async (searchKey, sortingCrieteria = null,memberId) => {
     // eslint-disable-next-line no-async-promise-executor,no-unused-vars
     return new Promise(async (resolve, reject) => {
@@ -423,6 +409,16 @@ const filterData = async (searchKey, sortingCrieteria = null,memberId) => {
                         // as: "OccupationDetail",
                     },
                     {
+                        attributes: ["VidhanSabhaName"],
+                        model: vidhanSabhaMaster,
+                        // as: "OccupationDetail",
+                    },
+                    {
+                        attributes: ["PollingBoothName"],
+                        model: polling_booth_master,
+                        // as: "OccupationDetail",
+                    },
+                    {
                         attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
                         model: voterMaster,
                         as: "FatherInLawDetail",
@@ -603,6 +599,21 @@ const getAllMembers = async (offset, pageNo,memberId) => {
                 {
                     attributes: ["Name"],
                     model: occupationMaster,
+                    // as: "OccupationDetail",
+                },
+                {
+                    attributes: ["VidhanSabhaName"],
+                    model: vidhanSabhaMaster,
+                    // as: "OccupationDetail",
+                },
+                {
+                    attributes: ["PollingBoothName"],
+                    model: polling_booth_master,
+                    // as: "OccupationDetail",
+                },
+                {
+                    attributes: ["WardName"],
+                    model: wardMaster,
                     // as: "OccupationDetail",
                 },
                 {
@@ -893,6 +904,21 @@ const searchData = async (searchKey,memberId) => {
                         attributes: ["TrustFactorId","Name","Color","ExtraMessage"],
                         model: trustFactorMaster,
 
+                        // as: "OccupationDetail",
+                    },
+                    {
+                        attributes: ["VidhanSabhaName"],
+                        model: vidhanSabhaMaster,
+                        // as: "OccupationDetail",
+                    },
+                    {
+                        attributes: ["PollingBoothName"],
+                        model: polling_booth_master,
+                        // as: "OccupationDetail",
+                    },
+                    {
+                        attributes: ["WardName"],
+                        model: wardMaster,
                         // as: "OccupationDetail",
                     },
                     {
@@ -3301,20 +3327,46 @@ const getBoothAddress = (boothId) =>{
 
     })
 }
-const getAddressID = (address,addressObj)=>{
+const addAllAdress = (array) =>{
+    return new Promise(async (resolve)=>{
+        let addressArray = []
+        await array.map((item)=>{
+            addressArray.push({Address:item.HouseNoEN+","+item.SectionNameEn})
+        })
+        let tempArray = await removeDuplicates(addressArray,"Address");
+        let tempFinalArrayForAddress = tempArray
+        await tempArray.map((item,index)=>{
+            let condition = {Address: { [Op.eq]: item.Address }};
+            addressMaster.findOne({where:condition}).then((res)=>{
+                if(res){
+                    if(index >= tempArray.length-1) {
+                        return resolve(true)
+                    }
+                } else {
+                    addressMaster.create({Address:item.Address}).then((isNewCreate)=>{
+                        console.log("new created")
+                        if(index >= tempArray.length-1) {
+                            return resolve(true)
+                        }
+                    })
+                }
+            })
+        })
+    })
+}
+
+const getAddressID = (address)=>{
     return new Promise((resolve)=>{
-        let condition = {Address: { [Op.eq]: address.toString() }};
-        addressMaster.findOne({where:condition}).then((isAddressAvailable)=>{
+        if(!isDefined(address)){
+            return resolve(null)
+        }
+        let condition = {Address: { [Op.eq]: address }};
+        addressMaster.findOne({where:condition}).then(async (isAddressAvailable)=>{
             if(isAddressAvailable){
                 return resolve(isAddressAvailable.dataValues.AddressId)
             } else {
                 let insAddressObj = {
-                    "Address":address.trim(),
-                    "CityOrVillageName":addressObj.CityOrVillageName,
-                    "DistrictName":addressObj.DistrictName,
-                    "StateName":addressObj.StateName,
-                    "CountryName":"INDIA",
-                    "PinCode":"395010"
+                    "Address":address,
                 }
                 addressMaster.create(insAddressObj).then((isNewAddressCreated)=>{
                     if(isNewAddressCreated){
@@ -3364,11 +3416,14 @@ const getFamilyId = (addressId) =>{
 }
 const getParentId = (middleName,age,familyId,needToCheckAge) =>{
     return new Promise((resolve)=>{
+        if(!isDefined(middleName) || !isDefined(age)){
+            return resolve(null)
+        }
         let condition = {FirstName: { [Op.like]: `%${middleName.trim()}%` },};
         voterMaster.findAll({where:condition}).then((isParentDataAvailable)=>{
             if(isParentDataAvailable){
                 if(isParentDataAvailable.length ===0){
-                    return resolve(false)
+                    return resolve(null)
                 }
                 else if(isParentDataAvailable.length === 1){
                     if(isParentDataAvailable[0].dataValues.FamilyId === familyId){
@@ -3378,7 +3433,7 @@ const getParentId = (middleName,age,familyId,needToCheckAge) =>{
                             resolve(isParentDataAvailable[0].dataValues.VoterId)
                         }
                     } else {
-                        resolve(false)
+                        return resolve(null)
                     }
                 } else {
                     isParentDataAvailable.map((parentListData)=>{
@@ -3389,16 +3444,15 @@ const getParentId = (middleName,age,familyId,needToCheckAge) =>{
                                 return resolve(isParentDataAvailable[0].dataValues.VoterId)
                             }
                         } else {
-                            resolve(false)
+                            return resolve(null)
                         }
                     })
                 }
             } else {
-
-                resolve(false)
+                return resolve(null)
             }
         }).catch((err)=>{
-            resolve(false)
+            return resolve(null)
         })
     })
 }
@@ -3408,9 +3462,8 @@ const checkMemberExistAndEnterDetails = (obj) =>{
             MiddleName: { [Op.like]: `%${obj.MiddleName.trim()}%` },
             Age: { [Op.eq]: `${obj.Age}` },
             Gender: { [Op.eq]: `${obj.Gender}` },
-            FamilyId: { [Op.eq]: `${obj.FamilyId}` },
+            // FamilyId: { [Op.eq]: `${obj.FamilyId}` },
         };
-
         voterMaster.findOne({where:condition}).then((isMemberAlreadyExist)=>{
             if(isMemberAlreadyExist){
                 condition = {VoterId: { [Op.eq]: `${isMemberAlreadyExist.dataValues.VoterId}` }};
@@ -3441,968 +3494,177 @@ const checkMemberExistAndEnterDetails = (obj) =>{
         })
     })
 }
-const insertBulkDataInDb = (dataArray,boothId) =>{
-    let updateIndex = 0;
+
+// {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 75, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "Polling AddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "CHHOTU RAM ", "RelationName2": "छोटू राम ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 1, "VoterId": "AZB1038934", "VoterName": "बजरंग लाल ", "VoterNameEn": "BAJRANG LAL ", "contactno": ""}
+const getVidhanSabhaId = (name) =>{
     return new Promise((resolve)=>{
-        getBoothAddress(boothId).then((bothAddress)=>{
-            if(bothAddress){
-                let boothData = bothAddress
-                dataArray.map((memberDetail,outSideIndex)=>{
-                    if(isDefined(memberDetail.HouseNo) && isDefined(memberDetail.Address) && isDefined(memberDetail.Gender) &&
-                        isDefined(memberDetail.Age) && isDefined(memberDetail.Relationship) && isDefined(memberDetail.Name) && isDefined(memberDetail.MiddleName)
-                    ){
-                        let tempAddress = memberDetail.HouseNo.toString().trim()+","+memberDetail.Address.toString().toLowerCase().trim();
-                        let condition = {Address: { [Op.eq]: tempAddress.trim() }};
-                        let AddressId = null;
-                        let FamilyId = null;
-                        let ParentId = null;
-                        getAddressID(tempAddress,boothData).then((responseAddressId)=>{
-                                    AddressId = responseAddressId;
-                                    getFamilyId(AddressId).then((responseFamilyId)=>{
-                                        FamilyId = responseFamilyId;
-                                        getParentId(memberDetail.MiddleName,memberDetail.Age,FamilyId,memberDetail.Relationship.toLowerCase() === 'father'?true:false).then((isParentAvailbel)=>{
-                                            if(isParentAvailbel){
-                                                ParentId = isParentAvailbel;
-                                            }
-                                            let insMemberObj = {
-                                                FirstName:memberDetail.Name,
-                                                MiddleName:memberDetail.MiddleName,
-                                                Age:memberDetail.Age,
-                                                Gender:memberDetail.Gender,
-                                                VoterVotingId:memberDetail.VoterId,
-                                                FamilyId:FamilyId,
-                                                BoothId:boothId
-                                            }
-                                            if(memberDetail.Relationship.toLowerCase() === 'father'){
-                                                insMemberObj = {...insMemberObj,FatherId:ParentId}
-                                            } else {
-                                                insMemberObj = {...insMemberObj,SpouseId:ParentId}
-                                            }
-                                            checkMemberExistAndEnterDetails(insMemberObj).then((isMemberCreated)=>{
-                                                updateIndex = updateIndex + 1;
-                                                if(updateIndex >= dataArray.length) {
-                                                    resolve(true)
-                                                }
-                                            })
-                                        })
-                                    })
-                                    resolve(true)
-                                })
-                    }
-                })
+        if(typeof name==='undefined'){
+            return resolve(null)
+        }
+        let condition = {
+            VidhanSabhaName: { [Op.like]: `%${name.trim()}%` },
+        };
+        vidhanSabhaMaster.findOne({where:condition}).then((isExist)=>{
+            if(isExist){
+                return resolve(isExist.dataValues.VidhanSabhaId)
             } else {
-                resolve(false)
+                let createNewVidhanSabhaObj = {
+                    VidhanSabhaName:name.trim()
+                }
+                vidhanSabhaMaster.create(createNewVidhanSabhaObj).then((isNewCreated)=>{
+                    if(isNewCreated){
+                        return resolve(isNewCreated.dataValues.VidhanSabhaId)
+                    } else {
+                        return resolve(null)
+                    }
+                }).catch((err)=>{
+                    return resolve(null)
+                })
             }
         }).catch((err)=>{
-            resolve(false)
+            return resolve(null)
         })
-
     })
 }
-// const insertBulkDataInDb = (dataArray) =>{
-//     return new Promise(async (resolve)=>{
-//         const allDataMembers = dataArray
-//         dataArray = await loadash.groupBy(dataArray, "address");
-//         let addressWiseDataArray = []
-//         await Object.entries(dataArray).forEach(async ([key, value]) => {
-//             addressWiseDataArray.push({"address":key,"addressData":value})
-//         });
-//         let tempBoothId = "W-101"
-//         let addressObj = {}
-//
-//         // await getBoothDataFromBoothId(tempBoothId).then((boothData)=>{
-//         //      if(boothData){
-//         //           addressObj = {
-//         //              CityOrVillageName:boothData.dataValues.WardCity,
-//         //              DistrictName:boothData.dataValues.DistrictName,
-//         //              StateName:boothData.dataValues.WardState,
-//         //              CountryName:"INDIA",
-//         //               BoothId:boothData.dataValues.WardId
-//         //          }
-//         //      }
-//         //  })
-//         // console.log(addressObj)
-//         let AddressId = 1;
-//         let insertMemberObj = null
-//         // await addressWiseDataArray.map((address)=>{
-//         //     checkAddressExist(address.address).then(async (isAddressExist)=>{
-//         //         if(isAddressExist){
-//         //             AddressId = isAddressExist
-//         //             let condition = {
-//         //                 ResidenceAddressId: { [Op.eq]: AddressId },
-//         //             };
-//         //                let FamilyId = 1;
-//         //                await familyMaster.findOne({where:condition}).then(async (isFamilyExist)=>{
-//         //                    if(isFamilyExist){
-//         //                        FamilyId = isFamilyExist.dataValues.FamilyId
-//         //                    } else{
-//         //                        await familyMaster.create({
-//         //                            ResidenceAddressId:AddressId
-//         //                        }).then((isNewFamilyCreated)=>{
-//         //                            if(isNewFamilyCreated){
-//         //                                FamilyId = isNewFamilyCreated.dataValues.FamilyId
-//         //                            }
-//         //                        }).catch((err)=>{
-//         //                            // console.log("new family err-",err)
-//         //                        })
-//         //                    }
-//         //                })
-//         //             await address.addressData.map(async (memberData)=>{
-//         //                    let isMemberParentExistInDb = false
-//         //                    condition = {
-//         //                        FirstName: { [Op.like]: `%${memberData.middleName.trim()}%` },
-//         //                    };
-//         //                    let tempFamilyId = FamilyId
-//         //                    let tempParentId = 0
-//         //                    await voterMaster.findAll({attributes:['FamilyId','VoterId'],where:condition}).then(async (isParentExist)=>{
-//         //                        if(isParentExist.length > 0){
-//         //                            if(isParentExist.length === 1){
-//         //                                tempFamilyId = isParentExist[0].dataValues.FamilyId
-//         //                                tempParentId = isParentExist[0].dataValues.VoterId
-//         //                            } else if(isParentExist.length>1) {
-//         //                                await isParentExist.map((parentData)=>{
-//         //                                    condition = {
-//         //                                        FamilyId: { [Op.eq]: parentData.FamilyId },
-//         //                                    };
-//         //                                    familyMaster.findOne({where:condition,
-//         //                                        include: [
-//         //                                            {
-//         //                                                model: addressMaster,
-//         //                                            }]
-//         //                                    }).then((parentAddressData)=>{
-//         //                                        if(parentAddressData.Address.length >= memberData.address){
-//         //                                            if(parentAddressData.Address.includes(memberData.address)){
-//         //                                                tempFamilyId = parentData.FamilyId;
-//         //                                                tempParentId = parentData.VoterId
-//         //                                                return;
-//         //                                            }
-//         //                                        } else {
-//         //                                            if(memberData.address.includes(parentAddressData.Address)){
-//         //                                                tempFamilyId = parentData.FamilyId;
-//         //                                                tempParentId = parentData.VoterId
-//         //                                                return;
-//         //                                            }
-//         //                                        }
-//         //                                    })
-//         //                                })
-//         //                            }
-//         //                            insertMemberObj = {
-//         //                                FirstName:memberData.name,
-//         //                                MiddleName:memberData.middleName,
-//         //                                DOB:memberData.dob,
-//         //                                Gender:memberData.gender,
-//         //                                VoterVotingId:memberData.voterVotingId,
-//         //                                BoothId:addressObj.BoothId,
-//         //                                FamilyId:tempFamilyId
-//         //                            }
-//         //                            if(parseInt(tempParentId) > 0){
-//         //                                if(memberData.relation === 'father'){
-//         //                                    insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//         //                                } else  {
-//         //                                    insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//         //                                }
-//         //                            }
-//         //
-//         //                            await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //                                if(isNewMemberCreated) {
-//         //                                    console.log("New member added from here...")
-//         //                                }
-//         //                            }).catch((err)=>{
-//         //                                // console.log("new member error from here..",err)
-//         //                            })
-//         //
-//         //                            tempParentId = 0;
-//         //                        } else {
-//         //
-//         //                            await allDataMembers.map(async (parentData,index)=>{
-//         //                                if(parentData.voterVotingId !== memberData.voterVotingId){
-//         //                                    if(parentData.name.includes(memberData.middleName)){
-//         //                                        isMemberParentExistInDb = true
-//         //                                        console.log("inside--",isMemberParentExistInDb)
-//         //                                        let insertParentMemberObj = {
-//         //                                            FirstName:parentData.name,
-//         //                                            MiddleName:parentData.middleName,
-//         //                                            DOB:parentData.dob,
-//         //                                            Gender:parentData.gender,
-//         //                                            VoterVotingId:parentData.voterVotingId,
-//         //                                            BoothId:addressObj.BoothId,
-//         //                                            FamilyId:tempFamilyId
-//         //                                        }
-//         //                                        await voterMaster.create(insertParentMemberObj).then(async (isParentInserted)=>{
-//         //                                            if(isParentInserted) {
-//         //                                                tempParentId = isParentInserted.dataValues.VoterId
-//         //                                                insertMemberObj = {
-//         //                                                    FirstName:memberData.name,
-//         //                                                    MiddleName:memberData.middleName,
-//         //                                                    DOB:memberData.dob,
-//         //                                                    Gender:memberData.gender,
-//         //                                                    VoterVotingId:memberData.voterVotingId,
-//         //                                                    BoothId:addressObj.BoothId,
-//         //                                                    FamilyId:tempFamilyId
-//         //                                                }
-//         //                                                if(parseInt(tempParentId) > 0){
-//         //                                                    if(memberData.relation === 'father'){
-//         //                                                        insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//         //                                                    } else  {
-//         //                                                        insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//         //                                                    }
-//         //                                                }
-//         //                                                await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //                                                    if(isNewMemberCreated) {
-//         //                                                        console.log("New member added...")
-//         //                                                    }
-//         //                                                }).catch((err)=>{
-//         //                                                    // console.log("new member error",err)
-//         //                                                })
-//         //                                                tempParentId = 0;
-//         //                                            }
-//         //                                        }).catch((err)=>{
-//         //                                            console.log("parent error",err)
-//         //                                        })
-//         //                                        return;
-//         //                                    }
-//         //                                }
-//         //                            })
-//         //                            if(!isMemberParentExistInDb){
-//         //                                insertMemberObj = {
-//         //                                    FirstName:memberData.name,
-//         //                                    MiddleName:memberData.middleName,
-//         //                                    DOB:memberData.dob,
-//         //                                    Gender:memberData.gender,
-//         //                                    VoterVotingId:memberData.voterVotingId,
-//         //                                    BoothId:addressObj.BoothId,
-//         //                                    FamilyId:FamilyId
-//         //                                }
-//         //                                await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //                                    if(isNewMemberCreated) {
-//         //                                        console.log("New member added...")
-//         //                                    }
-//         //                                }).catch((err)=>{
-//         //                                    // console.log("new member error",err)
-//         //                                })
-//         //                                isMemberParentExistInDb = false
-//         //                            }
-//         //
-//         //                        }
-//         //                    }).catch((err)=>{
-//         //                        // console.log("err-",err)
-//         //                    })
-//         //                })
-//         //
-//         //         } else {
-//         //             console.log("not exist")
-//         //               let addressObjToInsert = {
-//         //                   ...addressObj,
-//         //                   Address:address.address
-//         //               }
-//         //               await addressMaster.create(addressObjToInsert).then((res)=>{
-//         //                   if(res){
-//         //                       AddressId = res.dataValues.AddressId
-//         //                   }
-//         //               }).catch((err)=>{
-//         //                   // console.log(err)
-//         //               })
-//         //             let condition = {
-//         //                 ResidenceAddressId: { [Op.eq]: AddressId },
-//         //             };
-//         //             console.log(condition)
-//         //             let FamilyId = 1;
-//         //             await familyMaster.findOne({where:condition}).then(async (isFamilyExist)=>{
-//         //                 if(isFamilyExist){
-//         //                     FamilyId = isFamilyExist.dataValues.FamilyId
-//         //                 } else{
-//         //                     console.log({ResidenceAddressId:AddressId})
-//         //                     await familyMaster.create({
-//         //                         ResidenceAddressId:AddressId
-//         //                     }).then((isNewFamilyCreated)=>{
-//         //                         if(isNewFamilyCreated){
-//         //                             FamilyId = isNewFamilyCreated.dataValues.FamilyId
-//         //                         }
-//         //                         console.log("new family id-",FamilyId)
-//         //                     }).catch((err)=>{
-//         //                         console.log("new family err-",err)
-//         //                     })
-//         //                 }
-//         //             })
-//         //
-//         //             // await address.addressData.map(async (memberData)=>{
-//         //             //     let isMemberParentExistInDb = false
-//         //             //     condition = {
-//         //             //         FirstName: { [Op.like]: `%${memberData.middleName.trim()}%` },
-//         //             //     };
-//         //             //     let tempFamilyId = FamilyId
-//         //             //     let tempParentId = 0
-//         //             //     await voterMaster.findAll({attributes:['FamilyId','VoterId'],where:condition}).then(async (isParentExist)=>{
-//         //             //         if(isParentExist.length > 0){
-//         //             //             if(isParentExist.length === 1){
-//         //             //                 tempFamilyId = isParentExist[0].dataValues.FamilyId
-//         //             //                 tempParentId = isParentExist[0].dataValues.VoterId
-//         //             //             } else if(isParentExist.length>1) {
-//         //             //                 await isParentExist.map((parentData)=>{
-//         //             //                     condition = {
-//         //             //                         FamilyId: { [Op.eq]: parentData.FamilyId },
-//         //             //                     };
-//         //             //                     familyMaster.findOne({where:condition,
-//         //             //                         include: [
-//         //             //                             {
-//         //             //                                 model: addressMaster,
-//         //             //                             }]
-//         //             //                     }).then((parentAddressData)=>{
-//         //             //                         if(parentAddressData.Address.length >= memberData.address){
-//         //             //                             if(parentAddressData.Address.includes(memberData.address)){
-//         //             //                                 tempFamilyId = parentData.FamilyId;
-//         //             //                                 tempParentId = parentData.VoterId
-//         //             //                                 return;
-//         //             //                             }
-//         //             //                         } else {
-//         //             //                             if(memberData.address.includes(parentAddressData.Address)){
-//         //             //                                 tempFamilyId = parentData.FamilyId;
-//         //             //                                 tempParentId = parentData.VoterId
-//         //             //                                 return;
-//         //             //                             }
-//         //             //                         }
-//         //             //                     })
-//         //             //                 })
-//         //             //             }
-//         //             //             insertMemberObj = {
-//         //             //                 FirstName:memberData.name,
-//         //             //                 MiddleName:memberData.middleName,
-//         //             //                 DOB:memberData.dob,
-//         //             //                 Gender:memberData.gender,
-//         //             //                 VoterVotingId:memberData.voterVotingId,
-//         //             //                 BoothId:addressObj.BoothId,
-//         //             //                 FamilyId:tempFamilyId
-//         //             //             }
-//         //             //             if(parseInt(tempParentId) > 0){
-//         //             //                 if(memberData.relation === 'father'){
-//         //             //                     insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//         //             //                 } else  {
-//         //             //                     insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//         //             //                 }
-//         //             //             }
-//         //             //
-//         //             //             await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //             //                 if(isNewMemberCreated) {
-//         //             //                     console.log("New member added from here...")
-//         //             //                 }
-//         //             //             }).catch((err)=>{
-//         //             //                 // console.log("new member error from here..",err)
-//         //             //             })
-//         //             //
-//         //             //             tempParentId = 0;
-//         //             //         } else {
-//         //             //             await allDataMembers.map(async (parentData,index)=>{
-//         //             //                 if(parentData.voterVotingId !== memberData.voterVotingId){
-//         //             //                     if(parentData.name.includes(memberData.middleName)){
-//         //             //                         isMemberParentExistInDb = true
-//         //             //                         console.log("inside--",isMemberParentExistInDb)
-//         //             //                         let insertParentMemberObj = {
-//         //             //                             FirstName:parentData.name,
-//         //             //                             MiddleName:parentData.middleName,
-//         //             //                             DOB:parentData.dob,
-//         //             //                             Gender:parentData.gender,
-//         //             //                             VoterVotingId:parentData.voterVotingId,
-//         //             //                             BoothId:addressObj.BoothId,
-//         //             //                             FamilyId:tempFamilyId
-//         //             //                         }
-//         //             //                         await voterMaster.create(insertParentMemberObj).then(async (isParentInserted)=>{
-//         //             //                             if(isParentInserted) {
-//         //             //                                 tempParentId = isParentInserted.dataValues.VoterId
-//         //             //                                 insertMemberObj = {
-//         //             //                                     FirstName:memberData.name,
-//         //             //                                     MiddleName:memberData.middleName,
-//         //             //                                     DOB:memberData.dob,
-//         //             //                                     Gender:memberData.gender,
-//         //             //                                     VoterVotingId:memberData.voterVotingId,
-//         //             //                                     BoothId:addressObj.BoothId,
-//         //             //                                     FamilyId:tempFamilyId
-//         //             //                                 }
-//         //             //                                 if(parseInt(tempParentId) > 0){
-//         //             //                                     if(memberData.relation === 'father'){
-//         //             //                                         insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//         //             //                                     } else  {
-//         //             //                                         insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//         //             //                                     }
-//         //             //                                 }
-//         //             //                                 await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //             //                                     if(isNewMemberCreated) {
-//         //             //                                         console.log("New member added...")
-//         //             //                                     }
-//         //             //                                 }).catch((err)=>{
-//         //             //                                     // console.log("new member error",err)
-//         //             //                                 })
-//         //             //                                 tempParentId = 0;
-//         //             //                             }
-//         //             //                         }).catch((err)=>{
-//         //             //                             // console.log("parent error",err)
-//         //             //                         })
-//         //             //                         return;
-//         //             //                     }
-//         //             //                 }
-//         //             //             })
-//         //             //             if(!isMemberParentExistInDb){
-//         //             //                 insertMemberObj = {
-//         //             //                     FirstName:memberData.name,
-//         //             //                     MiddleName:memberData.middleName,
-//         //             //                     DOB:memberData.dob,
-//         //             //                     Gender:memberData.gender,
-//         //             //                     VoterVotingId:memberData.voterVotingId,
-//         //             //                     BoothId:addressObj.BoothId,
-//         //             //                     FamilyId:FamilyId
-//         //             //                 }
-//         //             //                 await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//         //             //                     if(isNewMemberCreated) {
-//         //             //                         console.log("New member added...")
-//         //             //                     }
-//         //             //                 }).catch((err)=>{
-//         //             //                     // console.log("new member error",err)
-//         //             //                 })
-//         //             //                 isMemberParentExistInDb = false
-//         //             //             }
-//         //             //
-//         //             //         }
-//         //             //     }).catch((err)=>{
-//         //             //         // console.log("err-",err)
-//         //             //     })
-//         //             // })
-//         //         }
-//         //     })
-//         // })
-//         let FamilyId = 1
-//
-//         addressWiseDataArray.map(async (address)=>{
-//             await checkAddressExist(address.address).then(async (isAddressExist)=>{
-//                 if(isAddressExist){
-//                     let FamilyId = isAddressExist;
-//                     let condition = null;
-//                     await address.addressData.map(async (memberData)=>{
-//                         let isMemberParentExistInDb = false
-//                         condition = {
-//                             FirstName: { [Op.like]: `%${memberData.middleName.trim()}%` },
-//                         };
-//                         let tempFamilyId = FamilyId
-//                         let tempParentId = 0;
-//                         let needToUpdate = false;
-//                         voterMaster.findOne({where:{VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.toString().trim()}` }}}).then(async (isMemberExist)=>{
-//                             if(isMemberExist){
-//                                 await voterMaster.findAll({attributes:['FamilyId','VoterId'],where:{
-//                                         FirstName: { [Op.like]: `%${memberData.middleName.trim()}%` },
-//                                     }}).then(async (isParentExist)=>{
-//                                     if(isParentExist.length > 0){
-//                                         // console.log("parent exist",memberData.name,isParentExist)
-//                                         if(isParentExist.length === 1){
-//                                             tempFamilyId = isParentExist[0].dataValues.FamilyId
-//                                             tempParentId = isParentExist[0].dataValues.VoterId
-//                                         } else if(isParentExist.length>1) {
-//                                             await isParentExist.map((parentData)=>{
-//                                                 condition = {
-//                                                     FamilyId: { [Op.eq]: parentData.FamilyId },
-//                                                 };
-//                                                 familyMaster.findOne({where:condition,
-//                                                     include: [
-//                                                         {
-//                                                             model: addressMaster,
-//                                                         }]
-//                                                 }).then((parentAddressData)=>{
-//                                                     if(parentAddressData.Address.length >= memberData.address){
-//                                                         if(parentAddressData.Address.includes(memberData.address)){
-//                                                             tempFamilyId = parentData.FamilyId;
-//                                                             tempParentId = parentData.VoterId
-//                                                             return;
-//                                                         }
-//                                                     } else {
-//                                                         if(memberData.address.includes(parentAddressData.Address)){
-//                                                             tempFamilyId = parentData.FamilyId;
-//                                                             tempParentId = parentData.VoterId
-//                                                             return;
-//                                                         }
-//                                                     }
-//                                                 })
-//                                             })
-//                                         }
-//                                         insertMemberObj = {
-//                                             FirstName:memberData.name,
-//                                             MiddleName:memberData.middleName,
-//                                             Age:memberData.age,
-//                                             Gender:memberData.gender,
-//                                             VoterVotingId:memberData.voterVotingId,
-//                                             BoothId:addressObj.BoothId,
-//                                             FamilyId:tempFamilyId
-//                                         }
-//                                         if(parseInt(tempParentId) > 0){
-//                                             if(memberData.relation === 'father'){
-//                                                 insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//                                             } else  {
-//                                                 insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//                                             }
-//                                         }
-//                                         voterMaster.update(insertMemberObj,{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.toString().trim()}` }}}).then((updateRes)=>{
-//                                             if(updateRes){
-//                                                 console.log("updated...")
-//                                             }
-//                                         }).catch((err)=>{
-//                                             console.log("erro")
-//                                         })
-//                                         // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                         //     if(isNewMemberCreated) {
-//                                         //         console.log("New member added from here...")
-//                                         //     }
-//                                         // }).catch((err)=>{
-//                                         //     // console.log("new member error from here..",err)
-//                                         // })
-//                                         // if(needToUpdate){
-//                                         //     voterMaster.update({insertMemberObj},{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.trim()}` }}}).then((updateRes)=>{
-//                                         //         if(updateRes){
-//                                         //             console.log("updated...")
-//                                         //         }
-//                                         //     }).catch((err)=>{
-//                                         //         console.log("erro")
-//                                         //     })
-//                                         // } else {
-//                                         //     await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                         //         if(isNewMemberCreated) {
-//                                         //             console.log("New member added from here...")
-//                                         //         }
-//                                         //     }).catch((err)=>{
-//                                         //         // console.log("new member error from here..",err)
-//                                         //     })
-//                                         // }
-//
-//
-//                                         tempParentId = 0;
-//                                     } else {
-//                                         await allDataMembers.map(async (parentData,index)=>{
-//                                             if(parentData.voterVotingId !== memberData.voterVotingId){
-//                                                 if(parentData.name.includes(memberData.middleName)){
-//                                                     isMemberParentExistInDb = true
-//                                                     let insertParentMemberObj = {
-//                                                         FirstName:parentData.name,
-//                                                         MiddleName:parentData.middleName,
-//                                                         Age:parentData.age,
-//                                                         Gender:parentData.gender,
-//                                                         VoterVotingId:parentData.voterVotingId,
-//                                                         BoothId:addressObj.BoothId,
-//                                                         FamilyId:tempFamilyId
-//                                                     }
-//                                                     await voterMaster.create(insertParentMemberObj).then(async (isParentInserted)=> {
-//                                                         if (isParentInserted) {
-//                                                             tempParentId = isParentInserted.dataValues.VoterId
-//                                                             insertMemberObj = {
-//                                                                 FirstName: memberData.name,
-//                                                                 MiddleName: memberData.middleName,
-//                                                                 Age: memberData.age,
-//                                                                 Gender: memberData.gender,
-//                                                                 VoterVotingId: memberData.voterVotingId,
-//                                                                 BoothId: addressObj.BoothId,
-//                                                                 FamilyId: tempFamilyId
-//                                                             }
-//                                                             if (parseInt(tempParentId) > 0) {
-//                                                                 if (memberData.relation === 'father') {
-//                                                                     insertMemberObj = {
-//                                                                         ...insertMemberObj,
-//                                                                         FatherId: tempParentId
-//                                                                     }
-//                                                                 } else {
-//                                                                     insertMemberObj = {
-//                                                                         ...insertMemberObj,
-//                                                                         SpouseId: tempParentId
-//                                                                     }
-//                                                                 }
-//                                                                 voterMaster.update(insertMemberObj,{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.toString().trim()}` }}}).then((updateRes)=>{
-//                                                                     if(updateRes){
-//                                                                         console.log("updated from heree...")
-//                                                                     }
-//                                                                 }).catch((err)=>{
-//                                                                     console.log("erro")
-//                                                                 })
-//                                                             }
-//                                                         }
-//                                                     })
-//                                                     //
-//                                                     //         // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                                     //         //     if(isNewMemberCreated) {
-//                                                     //         //         console.log("New member added from here...")
-//                                                     //         //     }
-//                                                     //         // }).catch((err)=>{
-//                                                     //         //     // console.log("new member error from here..",err)
-//                                                     //         // })
-//                                                     //
-//                                                     //
-//                                                     //             voterMaster.update({insertMemberObj},{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.trim()}` }}}).then((updateRes)=>{
-//                                                     //                 if(updateRes){
-//                                                     //                     console.log("updated...")
-//                                                     //                 }
-//                                                     //             }).catch((err)=>{
-//                                                     //                 console.log("error")
-//                                                     //             })
-//                                                     //
-//                                                     //
-//                                                     //         // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                                     //         //     if(isNewMemberCreated) {
-//                                                     //         //         console.log("New member added...")
-//                                                     //         //     }
-//                                                     //         // }).catch((err)=>{
-//                                                     //         //     // console.log("new member error",err)
-//                                                     //         // })
-//                                                     //         tempParentId = 0;
-//                                                     //     }
-//                                                     // }).catch((err)=>{
-//                                                     //     console.log("parent error",err)
-//                                                     // })
-//                                                     return;
-//                                                 }
-//                                             }
-//                                         })
-//                                         if(!isMemberParentExistInDb){
-//                                             insertMemberObj = {
-//                                                 FirstName:memberData.name,
-//                                                 MiddleName:memberData.middleName,
-//                                                 Age:memberData.age,
-//                                                 Gender:memberData.gender,
-//                                                 VoterVotingId:memberData.voterVotingId,
-//                                                 BoothId:addressObj.BoothId,
-//                                                 FamilyId:FamilyId
-//                                             }
-//                                             await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                                 if(isNewMemberCreated) {
-//                                                     console.log("New member added...")
-//                                                 }
-//                                             }).catch((err)=>{
-//                                                 // console.log("new member error",err)
-//                                             })
-//                                             isMemberParentExistInDb = false
-//                                         }
-//
-//                                     }
-//                                 }).catch((err)=>{
-//                                     // console.log("err-",err)
-//                                 })
-//
-//                             } else {
-//                                 console.log("called--")
-//                                 await voterMaster.findAll({attributes:['FamilyId','VoterId'],where:{
-//                                         FirstName: { [Op.like]: `%${memberData.middleName.trim()}%` },
-//                                     }}).then(async (isParentExist)=>{
-//                                     if(isParentExist.length > 0){
-//                                         // console.log("parent exist",memberData.name,isParentExist)
-//                                         if(isParentExist.length === 1){
-//                                             tempFamilyId = isParentExist[0].dataValues.FamilyId
-//                                             tempParentId = isParentExist[0].dataValues.VoterId
-//                                         } else if(isParentExist.length>1) {
-//                                             await isParentExist.map((parentData)=>{
-//                                                 condition = {
-//                                                     FamilyId: { [Op.eq]: parentData.FamilyId },
-//                                                 };
-//                                                 familyMaster.findOne({where:condition,
-//                                                     include: [
-//                                                         {
-//                                                             model: addressMaster,
-//                                                         }]
-//                                                 }).then((parentAddressData)=>{
-//                                                     if(parentAddressData.Address.length >= memberData.address){
-//                                                         if(parentAddressData.Address.includes(memberData.address)){
-//                                                             tempFamilyId = parentData.FamilyId;
-//                                                             tempParentId = parentData.VoterId
-//                                                             return;
-//                                                         }
-//                                                     } else {
-//                                                         if(memberData.address.includes(parentAddressData.Address)){
-//                                                             tempFamilyId = parentData.FamilyId;
-//                                                             tempParentId = parentData.VoterId
-//                                                             return;
-//                                                         }
-//                                                     }
-//                                                 })
-//                                             })
-//                                         }
-//                                         insertMemberObj = {
-//                                             FirstName:memberData.name,
-//                                             MiddleName:memberData.middleName,
-//                                             Age:memberData.age,
-//                                             Gender:memberData.gender,
-//                                             VoterVotingId:memberData.voterVotingId,
-//                                             BoothId:addressObj.BoothId,
-//                                             FamilyId:tempFamilyId
-//                                         }
-//                                         if(parseInt(tempParentId) > 0){
-//                                             if(memberData.relation === 'father'){
-//                                                 insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//                                             } else  {
-//                                                 insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//                                             }
-//                                         }
-//                                         voterMaster.create(insertMemberObj).then((updateRes)=>{
-//                                             if(updateRes){
-//                                                 console.log("inserted...")
-//                                             }
-//                                         }).catch((err)=>{
-//                                             console.log("erro")
-//                                         })
-//                                         tempParentId = 0;
-//                                     } else {
-//                                         await allDataMembers.map(async (parentData,index)=>{
-//                                             if(parentData.voterVotingId !== memberData.voterVotingId){
-//                                                 if(parentData.name.includes(memberData.middleName)){
-//                                                     isMemberParentExistInDb = true
-//                                                     let insertParentMemberObj = {
-//                                                         FirstName:parentData.name,
-//                                                         MiddleName:parentData.middleName,
-//                                                         Age:parentData.age,
-//                                                         Gender:parentData.gender,
-//                                                         VoterVotingId:parentData.voterVotingId,
-//                                                         BoothId:addressObj.BoothId,
-//                                                         FamilyId:tempFamilyId
-//                                                     }
-//                                                     await voterMaster.create(insertParentMemberObj).then(async (isParentInserted)=> {
-//                                                         if (isParentInserted) {
-//                                                             tempParentId = isParentInserted.dataValues.VoterId
-//                                                             insertMemberObj = {
-//                                                                 FirstName: memberData.name,
-//                                                                 MiddleName: memberData.middleName,
-//                                                                 Age: memberData.age,
-//                                                                 Gender: memberData.gender,
-//                                                                 VoterVotingId: memberData.voterVotingId,
-//                                                                 BoothId: addressObj.BoothId,
-//                                                                 FamilyId: tempFamilyId
-//                                                             }
-//                                                             if (parseInt(tempParentId) > 0) {
-//                                                                 if (memberData.relation === 'father') {
-//                                                                     insertMemberObj = {
-//                                                                         ...insertMemberObj,
-//                                                                         FatherId: tempParentId
-//                                                                     }
-//                                                                 } else {
-//                                                                     insertMemberObj = {
-//                                                                         ...insertMemberObj,
-//                                                                         SpouseId: tempParentId
-//                                                                     }
-//                                                                 }
-//                                                                 voterMaster.create(insertMemberObj).then((updateRes)=>{
-//                                                                     if(updateRes){
-//                                                                         console.log("inserted from heree...")
-//                                                                     }
-//                                                                 }).catch((err)=>{
-//                                                                     console.log("erro")
-//                                                                 })
-//                                                             }
-//                                                         }
-//                                                     })
-//                                                     return;
-//                                                 }
-//                                             }
-//                                         })
-//                                         if(!isMemberParentExistInDb){
-//                                             console.log("--called")
-//                                             insertMemberObj = {
-//                                                 FirstName:memberData.name,
-//                                                 MiddleName:memberData.middleName,
-//                                                 Age:memberData.age,
-//                                                 Gender:memberData.gender,
-//                                                 VoterVotingId:memberData.voterVotingId,
-//                                                 BoothId:addressObj.BoothId,
-//                                                 FamilyId:FamilyId
-//                                             }
-//                                             await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                                                 if(isNewMemberCreated) {
-//                                                     console.log("New member added...")
-//                                                 }
-//                                             }).catch((err)=>{
-//                                                 // console.log("new member error",err)
-//                                             })
-//                                             isMemberParentExistInDb = false
-//                                         }
-//
-//                                     }
-//                                 }).catch((err)=>{
-//                                     // console.log("err-",err)
-//                                 })
-//                             }
-//                         })
-//                         // await voterMaster.findOne({VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.trim()}` }}).then(async (isMemberAlreadyExist)=>{
-//                         //     await voterMaster.findAll({attributes:['FamilyId','VoterId'],where:condition}).then(async (isParentExist)=>{
-//                         //         if(isParentExist.length > 0){
-//                         //             if(isParentExist.length === 1){
-//                         //                 tempFamilyId = isParentExist[0].dataValues.FamilyId
-//                         //                 tempParentId = isParentExist[0].dataValues.VoterId
-//                         //             } else if(isParentExist.length>1) {
-//                         //                 await isParentExist.map((parentData)=>{
-//                         //                     condition = {
-//                         //                         FamilyId: { [Op.eq]: parentData.FamilyId },
-//                         //                     };
-//                         //                     familyMaster.findOne({where:condition,
-//                         //                         include: [
-//                         //                             {
-//                         //                                 model: addressMaster,
-//                         //                             }]
-//                         //                     }).then((parentAddressData)=>{
-//                         //                         if(parentAddressData.Address.length >= memberData.address){
-//                         //                             if(parentAddressData.Address.includes(memberData.address)){
-//                         //                                 tempFamilyId = parentData.FamilyId;
-//                         //                                 tempParentId = parentData.VoterId
-//                         //                                 return;
-//                         //                             }
-//                         //                         } else {
-//                         //                             if(memberData.address.includes(parentAddressData.Address)){
-//                         //                                 tempFamilyId = parentData.FamilyId;
-//                         //                                 tempParentId = parentData.VoterId
-//                         //                                 return;
-//                         //                             }
-//                         //                         }
-//                         //                     })
-//                         //                 })
-//                         //             }
-//                         //             insertMemberObj = {
-//                         //                 FirstName:memberData.name,
-//                         //                 MiddleName:memberData.middleName,
-//                         //                 DOB:memberData.dob,
-//                         //                 Gender:memberData.gender,
-//                         //                 VoterVotingId:memberData.voterVotingId,
-//                         //                 BoothId:addressObj.BoothId,
-//                         //                 FamilyId:tempFamilyId
-//                         //             }
-//                         //             if(parseInt(tempParentId) > 0){
-//                         //                 if(memberData.relation === 'father'){
-//                         //                     insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//                         //                 } else  {
-//                         //                     insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//                         //                 }
-//                         //             }
-//                         //             // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                         //             //     if(isNewMemberCreated) {
-//                         //             //         console.log("New member added from here...")
-//                         //             //     }
-//                         //             // }).catch((err)=>{
-//                         //             //     // console.log("new member error from here..",err)
-//                         //             // })
-//                         //             if(needToUpdate){
-//                         //                 voterMaster.update({insertMemberObj},{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.trim()}` }}}).then((updateRes)=>{
-//                         //                     if(updateRes){
-//                         //                         console.log("updated...")
-//                         //                     }
-//                         //                 }).catch((err)=>{
-//                         //                     console.log("erro")
-//                         //                 })
-//                         //             } else {
-//                         //                 await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                         //                     if(isNewMemberCreated) {
-//                         //                         console.log("New member added from here...")
-//                         //                     }
-//                         //                 }).catch((err)=>{
-//                         //                     // console.log("new member error from here..",err)
-//                         //                 })
-//                         //             }
-//                         //
-//                         //
-//                         //             tempParentId = 0;
-//                         //         } else {
-//                         //             await allDataMembers.map(async (parentData,index)=>{
-//                         //                 if(parentData.voterVotingId !== memberData.voterVotingId){
-//                         //                     if(parentData.name.includes(memberData.middleName)){
-//                         //                         isMemberParentExistInDb = true
-//                         //                         console.log("inside--",isMemberParentExistInDb)
-//                         //                         let insertParentMemberObj = {
-//                         //                             FirstName:parentData.name,
-//                         //                             MiddleName:parentData.middleName,
-//                         //                             DOB:parentData.dob,
-//                         //                             Gender:parentData.gender,
-//                         //                             VoterVotingId:parentData.voterVotingId,
-//                         //                             BoothId:addressObj.BoothId,
-//                         //                             FamilyId:tempFamilyId
-//                         //                         }
-//                         //                         await voterMaster.create(insertParentMemberObj).then(async (isParentInserted)=>{
-//                         //                             if(isParentInserted) {
-//                         //                                 tempParentId = isParentInserted.dataValues.VoterId
-//                         //                                 insertMemberObj = {
-//                         //                                     FirstName:memberData.name,
-//                         //                                     MiddleName:memberData.middleName,
-//                         //                                     DOB:memberData.dob,
-//                         //                                     Gender:memberData.gender,
-//                         //                                     VoterVotingId:memberData.voterVotingId,
-//                         //                                     BoothId:addressObj.BoothId,
-//                         //                                     FamilyId:tempFamilyId
-//                         //                                 }
-//                         //                                 if(parseInt(tempParentId) > 0){
-//                         //                                     if(memberData.relation === 'father'){
-//                         //                                         insertMemberObj = {...insertMemberObj,FatherId:tempParentId}
-//                         //                                     } else  {
-//                         //                                         insertMemberObj = {...insertMemberObj,SpouseId:tempParentId}
-//                         //                                     }
-//                         //                                 }
-//                         //
-//                         //                                 // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                         //                                 //     if(isNewMemberCreated) {
-//                         //                                 //         console.log("New member added from here...")
-//                         //                                 //     }
-//                         //                                 // }).catch((err)=>{
-//                         //                                 //     // console.log("new member error from here..",err)
-//                         //                                 // })
-//                         //
-//                         //                                 if(needToUpdate){
-//                         //                                     voterMaster.update({insertMemberObj},{where: {VoterVotingId: { [Op.eq]: `${memberData.voterVotingId.trim()}` }}}).then((updateRes)=>{
-//                         //                                         if(updateRes){
-//                         //                                             console.log("updated...")
-//                         //                                         }
-//                         //                                     }).catch((err)=>{
-//                         //                                         console.log("error")
-//                         //                                     })
-//                         //                                 } else {
-//                         //
-//                         //                                 }
-//                         //
-//                         //                                 // await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                         //                                 //     if(isNewMemberCreated) {
-//                         //                                 //         console.log("New member added...")
-//                         //                                 //     }
-//                         //                                 // }).catch((err)=>{
-//                         //                                 //     // console.log("new member error",err)
-//                         //                                 // })
-//                         //                                 tempParentId = 0;
-//                         //                             }
-//                         //                         }).catch((err)=>{
-//                         //                             console.log("parent error",err)
-//                         //                         })
-//                         //                         return;
-//                         //                     }
-//                         //                 }
-//                         //             })
-//                         //             if(!isMemberParentExistInDb){
-//                         //                 insertMemberObj = {
-//                         //                     FirstName:memberData.name,
-//                         //                     MiddleName:memberData.middleName,
-//                         //                     DOB:memberData.dob,
-//                         //                     Gender:memberData.gender,
-//                         //                     VoterVotingId:memberData.voterVotingId,
-//                         //                     BoothId:addressObj.BoothId,
-//                         //                     FamilyId:FamilyId
-//                         //                 }
-//                         //                 await voterMaster.create(insertMemberObj).then((isNewMemberCreated)=>{
-//                         //                     if(isNewMemberCreated) {
-//                         //                         console.log("New member added...")
-//                         //                     }
-//                         //                 }).catch((err)=>{
-//                         //                     // console.log("new member error",err)
-//                         //                 })
-//                         //                 isMemberParentExistInDb = false
-//                         //             }
-//                         //
-//                         //         }
-//                         //     }).catch((err)=>{
-//                         //         // console.log("err-",err)
-//                         //     })
-//                         // }).catch((err)=>{
-//                         //
-//                         // })
-//
-//                     })
-//
-//                 } else {
-//                     console.log("not exist")
-//                 }
-//             })
-//             resolve(true)
-//         })
-//     })
-// }
+const getPollingBoothStationId = (name) =>{
+    return new Promise((resolve)=>{
+        if(!isDefined(name)){
+            return resolve(null)
+        }
+        let condition = {
+            PollingBoothName: { [Op.like]: `%${name.trim()}%` },
+        };
+        polling_booth_master.findOne({where:condition}).then((isExist)=>{
+            if(isExist){
+                return resolve(isExist.dataValues.PollingBoothStationId)
+            } else {
+                let createNewBoothObj = {
+                    PollingBoothName:name.trim(),
+                }
+                polling_booth_master.create(createNewBoothObj).then((isNewCreated)=>{
+                    if(isNewCreated){
+                        return resolve(isNewCreated.dataValues.PollingBoothStationId)
+                    } else {
+                        return resolve(null)
+                    }
+                }).catch((err)=>{
+                    return resolve(null)
+                })
+            }
+        }).catch((err)=>{
+            return resolve(null)
+        })
+    })
+}
+const getBoothId= (name,boothNo,boothAddress) =>{
+    return new Promise((resolve)=>{
+        if(typeof name==='undefined'){
+            return resolve(null)
+        } else {
+            let condition = {
+                WardName: { [Op.like]: `%${name.trim()}%` },
+            };
+            let insertNewObj = {
+                WardName : name.trim()
+            }
+            if(isDefined(boothNo)){
+                condition = {
+                    ...condition,
+                    WardCode: { [Op.like]: `%${boothNo}%` },
+                }
+                insertNewObj = {
+                    ...insertNewObj,
+                    WardCode:boothNo
+                }
+            }
+            if(isDefined(boothAddress)){
+                condition = {
+                    ...condition,
+                    WardAddress: { [Op.like]: `%${boothAddress.trim()}%` },
+                }
+                insertNewObj = {
+                    ...insertNewObj,
+                    WardAddress:boothAddress.trim()
+                }
+            }
+            wardMaster.findOne({where:condition}).then((isExisted)=>{
+                if(isExisted){
+                    return resolve(isExisted.dataValues.WardId)
+                } else {
+                    wardMaster.create(insertNewObj).then((isNewCreated)=>{
+                        if(isNewCreated){
+                            return resolve(isNewCreated.dataValues.WardId)
+                        } else {
+                            return resolve(null)
+                        }
+                    }).catch((err)=>{
+                        return resolve(null)
+                    })
+                }
+            }).catch((err)=>{
+                return resolve(null)
+            })
+        }
+    })
+}
+
+const insertBulkDataInDb = (dataArray) =>{
+    let insvidhanSabhaId = null;
+    let insboothId = null;
+    let inspollingStationId = null;
+    let insfamilyId = null;
+    let insparentId = null;
+    let insaddressId = null;
+    return new Promise(async (resolve)=>{
+        let tempArray = []
+        let arrayLength = dataArray.length
+        await dataArray.map((item)=>{
+            tempArray.push({...item,Address:item.HouseNoEN+","+item.SectionNameEn})
+        })
+        tempArray = await loadash.groupBy(tempArray, "Address");
+        let updateCounter = 0;
+        for (const key in tempArray) {
+            if (tempArray.hasOwnProperty(key)) {
+                const value = tempArray[key];
+                insaddressId = await getAddressID(key);
+                insfamilyId = await getFamilyId(insaddressId);
+                const result = value.map(async (memberDetail)=>{
+                    if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
+                        isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
+                        && isDefined(memberDetail.VoterId) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
+                    ){
+                        insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
+                        insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.PartNo);
+                        inspollingStationId = await getPollingBoothStationId(memberDetail.PollingAddressEn);
+                        insparentId = await getParentId(memberDetail.RelationName,memberDetail.Age,insaddressId,memberDetail.RelayionType.toLowerCase() === 'f'?true:false);
+                        let insMemberObj = {
+                            FirstName:memberDetail.VoterNameEn,
+                            MiddleName:memberDetail.RelationName,
+                            Age:memberDetail.Age,
+                            Gender:memberDetail.Sex.toLowerCase() ==='m'?'male':'female',
+                            VoterVotingId:memberDetail.VoterId,
+                            FamilyId:insfamilyId,
+                            BoothId:insboothId,
+                            VidhanSabhaId:insvidhanSabhaId,
+                            PollingStationId:inspollingStationId,
+                            VoterHindiName:memberDetail.VoterName
+                        }
+                        if(memberDetail.RelayionType.toLowerCase() === 'f'){
+                            insMemberObj = {...insMemberObj,FatherId:insparentId}
+                        } else {
+                            insMemberObj = {...insMemberObj,SpouseId:insparentId}
+                        }
+                        let isMemberCreated = await checkMemberExistAndEnterDetails(insMemberObj);
+                        updateCounter = updateCounter + 1;
+                        if(updateCounter >= arrayLength-1){
+                            return resolve(true)
+                        }
+                    }
+                })
+            }
+        }
+    })
+}
 
 const uploadImageOnFirebase = async (imgPath, destinationPath) => {
     // eslint-disable-next-line no-async-promise-executor
@@ -4782,5 +4044,9 @@ module.exports = {
     getCountryCode,
     getEventInformation,
     getSpecificMemberDetail,
-    getAllInclunecerMembers
+    getAllInclunecerMembers,
+    getPollingBoothStationId,
+    getVidhanSabhaId,
+    getAddressID,
+    addAllAdress
 };
