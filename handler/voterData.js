@@ -3631,10 +3631,10 @@ const insertBulkDataInDb = (dataArray) =>{
                 const result = value.map(async (memberDetail)=>{
                     if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
                         isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
-                        && isDefined(memberDetail.VoterId) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
+                        && isDefined(memberDetail.VoterId)  && isDefined(memberDetail.SectionNo) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
                     ){
                         insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
-                        insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.PartNo);
+                        insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.SectionNo);
                         inspollingStationId = await getPollingBoothStationId(memberDetail.PollingAddressEn);
                         insparentId = await getParentId(memberDetail.RelationName,memberDetail.Age,insaddressId,memberDetail.RelayionType.toLowerCase() === 'f'?true:false);
                         let insMemberObj = {

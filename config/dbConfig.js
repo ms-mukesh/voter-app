@@ -17,9 +17,9 @@ const env_var = {
     },
     liveClientTesting: {
         HOST: "us-cdbr-east-03.cleardb.com",
-        USER: "bba0cd8c7f16ac",
-        PASSWORD: "9561adb4",
-        DB: "heroku_2ad91348d237238",
+        USER: "bded972b8d7398",
+        PASSWORD: "f29dff2d",
+        DB: "heroku_0f888c1c6017d15",
         dialect: "mysql",
         pool: {
             max: 5,
