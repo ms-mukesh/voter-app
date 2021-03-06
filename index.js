@@ -21,27 +21,11 @@ let tempArray = [ {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "A
   {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 28, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "PollingAddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BABU KHAN ", "RelationName2": "बाबू खाँ ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 6, "VoterId": "MTW1036755", "VoterName": "सायरी देवी ", "VoterNameEn": "SAYARI DEVI ", "contactno": ""},
   {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 26, "HouseNo": "2", "HouseNoEN": "2", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "PollingAddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "MAHBUB KHAN ", "RelationName2": "महबुब खान ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 7, "VoterId": "AZB0863241", "VoterName": "तबसुम बानो ", "VoterNameEn": "TABSUM BANO ", "contactno": ""}
 ]
-let temp = [{"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 44, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "PollingAddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "GUMANA RAM ", "RelationName2": "गुमाना राम  ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 3, "VoterId": "AZB1038868", "VoterName": "भंवरी देवी ", "VoterNameEn": "BHANWARI DEVI ", "contactno": ""}]
-//
-// insertBulkDataInDb(tempArray).then((res)=>{
-//   console.log(res)
-// })
-
-
-// addAllAdress(tempArray).then((res)=>{
-//   console.log(res)
-// })
-
-// getAddressID("1K","RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA").then((res)=>{
-//
-//   console.log(res)
-// })
-
-
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(cors());
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true,limit: '50mb' }));
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
