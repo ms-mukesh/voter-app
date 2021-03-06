@@ -403,7 +403,7 @@ const filterData = async (searchKey, sortingCrieteria = null,memberId) => {
                         // as: "OccupationDetail",
                     },
                     {
-                        attributes: ["WardName"],
+                        attributes: ["WardName","WardCode"],
                         model: wardMaster,
                         where:boothMasterCondition
                         // as: "OccupationDetail",
@@ -612,7 +612,7 @@ const getAllMembers = async (offset, pageNo,memberId) => {
                     // as: "OccupationDetail",
                 },
                 {
-                    attributes: ["WardName"],
+                    attributes: ["WardName","WardCode"],
                     model: wardMaster,
                     // as: "OccupationDetail",
                 },
@@ -917,7 +917,7 @@ const searchData = async (searchKey,memberId) => {
                         // as: "OccupationDetail",
                     },
                     {
-                        attributes: ["WardName"],
+                        attributes: ["WardName","WardCode"],
                         model: wardMaster,
                         // as: "OccupationDetail",
                     },
