@@ -1,9 +1,9 @@
 const cenv = "localTesting";
 const env_var = {
     localTesting: {
-        HOST: "localhost",
-        USER: "root",
-        PASSWORD: "password",
+        HOST: "139.59.1.188",
+        USER: "root_admin",
+        PASSWORD: "Abcdef123!@#",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",
