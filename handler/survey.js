@@ -22,6 +22,7 @@ const getSurveyList = () =>{
 const addNewSurvey = (obj) =>{
     return new Promise((resolve)=>{
         survey_master.create(obj).then(async (isCreated)=>{
+            console.log(isCreated)
             if(isCreated){
                 const result = await defaultQuestion.map( function(el) {
                     var o = Object.assign({}, el);
@@ -45,6 +46,7 @@ const addNewSurvey = (obj) =>{
                 return resolve(false)
             }
         }).catch((err)=>{
+            console.log(err)
             return resolve(false)
         })
     })

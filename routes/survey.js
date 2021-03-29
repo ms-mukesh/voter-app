@@ -47,12 +47,14 @@ router.post(
     },
     async (req, res) => {
         addNewSurvey(req.body).then((surveys)=>{
+            console.log(surveys)
             if(surveys){
                 res.status(200).send({ data: "survey created" });
             } else {
                 res.status(201).send({ data: "fail to create survey" });
             }
         }).catch((err)=>{
+            console.log(err)
             res.status(201).send({ data: "fail to create survey" });
         })
     }

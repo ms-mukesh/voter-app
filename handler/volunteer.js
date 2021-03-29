@@ -523,17 +523,6 @@ const getVolunteerChanges = (volunteerId) =>{
             .findAll({
                 attributes: VOTER_ATTRIBUTES,
                 where: condition,
-                order: [
-                    [
-                        sequelize.fn(
-                            "concat",
-                            sequelize.col("voterMasterRequest.FirstName"),
-                            sequelize.col("voterMasterRequest.MiddleName"),
-                            sequelize.col("voterMasterRequest.LastName")
-                        ),
-                        "ASC",
-                    ],
-                ],
                 include: [
                     {
                         attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],
@@ -603,17 +592,6 @@ const getAllVolunteerRequest = (volunteerId) =>{
             .findAll({
                 attributes: [...VOTER_ATTRIBUTES,"IsApproved"],
                 where: condition,
-                order: [
-                    [
-                        sequelize.fn(
-                            "concat",
-                            sequelize.col("voterMasterRequest.FirstName"),
-                            sequelize.col("voterMasterRequest.MiddleName"),
-                            sequelize.col("voterMasterRequest.LastName")
-                        ),
-                        "ASC",
-                    ],
-                ],
                 include: [
                     {
                         attributes: ["VoterId", "FirstName", "MiddleName", "LastName"],

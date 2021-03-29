@@ -183,7 +183,7 @@ const fetchAllNativePlace = () => {
 };
 const fetchAllBoothName = () =>{
     return new Promise(async (resolve) => {
-        const attributeList = ["WardName"];
+        const attributeList = ["WardCode"];
         let tempData = "";
         const tempDataArray = [];
         await getDataFromTable(wardMaster, attributeList, "").then(
@@ -193,13 +193,12 @@ const fetchAllBoothName = () =>{
                 }
                 await res.map((data) => {
                     tempData = data.dataValues;
-                    if(tempData.WardName!==null && tempData.WardName!=='' ){
-                        tempDataArray.push(tempData.WardName);
+                    if(tempData.WardCode!==null && tempData.WardCode!=='' ){
+                        tempDataArray.push(tempData.WardCode);
                     }
-
                 });
                 const obj = {
-                    BoothName: tempDataArray,
+                    BoothName: uniq(tempDataArray),
                 };
                 resolve(obj);
             }

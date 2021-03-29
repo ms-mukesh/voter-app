@@ -141,7 +141,11 @@ const VoterMasterRequest = sequelize.define(
         IsApproved :{
             type: Sequelize.INTEGER,
             allowNull: true,
-        }
+        },
+        VoterHindiName: {
+            type: Sequelize.STRING,
+            allowNull: true,
+        },
     },
     {
         freezeTableName: true,

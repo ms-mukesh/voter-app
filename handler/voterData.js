@@ -234,7 +234,7 @@ const filterData = async (searchKey, sortingCrieteria = null,memberId) => {
         if (isDefined(searchKey.BoothName)) {
             boothMasterCondition = {
                 ...boothMasterCondition,
-                WardName: searchKey.BoothName,
+                WardCode: searchKey.BoothName,
             };
         }
         if (isDefined(searchKey.Sirname)) {
@@ -3556,13 +3556,13 @@ const getPollingBoothStationId = (name) =>{
         })
     })
 }
-const getBoothId= (name,boothNo,boothAddress) =>{
+const getBoothId= (name,boothNo) =>{
     return new Promise((resolve)=>{
-        if(typeof name==='undefined'){
+        if(typeof name === 'undefined'){
             return resolve(null)
         } else {
             let condition = {
-                WardName: { [Op.like]: `%${name.trim()}%` },
+                WardName: { [Op.like]: `%${name}%` },
             };
             let insertNewObj = {
                 WardName : name.trim()
@@ -3570,23 +3570,23 @@ const getBoothId= (name,boothNo,boothAddress) =>{
             if(isDefined(boothNo)){
                 condition = {
                     ...condition,
-                    WardCode: { [Op.like]: `%${boothNo}%` },
+                    WardCode: { [Op.eq]: `${boothNo}` },
                 }
                 insertNewObj = {
                     ...insertNewObj,
                     WardCode:boothNo
                 }
             }
-            if(isDefined(boothAddress)){
-                condition = {
-                    ...condition,
-                    WardAddress: { [Op.like]: `%${boothAddress.trim()}%` },
-                }
-                insertNewObj = {
-                    ...insertNewObj,
-                    WardAddress:boothAddress.trim()
-                }
-            }
+            // if(isDefined(boothAddress)){
+            //     condition = {
+            //         ...condition,
+            //         WardAddress: { [Op.like]: `%${boothAddress.trim()}%` },
+            //     }
+            //     insertNewObj = {
+            //         ...insertNewObj,
+            //         WardAddress:boothAddress.trim()
+            //     }
+            // }
             wardMaster.findOne({where:condition}).then((isExisted)=>{
                 if(isExisted){
                     return resolve(isExisted.dataValues.WardId)
