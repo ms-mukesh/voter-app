@@ -1,8 +1,14 @@
-const {getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
+const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const loadash = require("lodash")
 const express = require("express");
+const http = require("https")
+const fs = require("fs");
+const uuid = require("uuid-v4");
+const  xlsx = require('node-xlsx');
+const readXlsxFile = require('read-excel-file/node');
+var xlsxtojson = require("xlsx-to-json-lc");
 const {
     getMemberData,
 
@@ -574,6 +580,162 @@ router.post("/addBulkData", async (req, res) => {
     }).catch((err)=>{
         return res.status(201).send({data:"not able to add data"});
     })
+
+});
+
+router.post("/addBulkDataFromWeb",(req,res,next)=>{
+    if (!req.body.fileUrl) {
+        return res
+            .status(201)
+            .send({ data: "Please Provide Valid File" });
+    }
+    next();
+}, async (req, res) => {
+    // console.log(req.body.csvData)
+    const fileName = "EXCEL/"+"EXCEL_"+new Date().getTime()+".xlsx"
+    const file = fs.createWriteStream(fileName);
+    var exceltojson = xlsxtojson;
+    try {
+        const request = http.get(req.body.fileUrl, function(response) {
+            response.pipe(file);
+            setTimeout(()=>{
+                exceltojson({
+                    input: fileName,
+                    output: null, //since we don't need output.json
+                    lowerCaseHeaders:false
+                }, function(err,result){
+                    if(err) {
+                        return res.json({error_code:1,err_desc:err, data: null});
+                    }
+                    const csvData = result
+                    if(isDefined(csvData[0].AcNameEn) && isDefined(csvData[0].PollingAddressEn) && isDefined(csvData[0].Age) && isDefined(csvData[0].SectionNameEn) &&
+                        isDefined(csvData[0].PartNameEn) && isDefined(csvData[0].RelationName)  && isDefined(csvData[0].RelayionType) && isDefined(csvData[0].Sex)
+                        && isDefined(csvData[0].SectionNo) && isDefined(csvData[0].VoterId) && isDefined(csvData[0].VoterNameEn) && isDefined(csvData[0].VoterName)
+                    ){
+                        setTimeout(()=>{
+                            fs.unlink(fileName, (err) => {
+                                if (err) {
+                                    console.error(err)
+                                }
+                            })
+                            return res.status(200).send({data:"data Added Scussfully"});
+                        },50000)
+                        insertBulkDataInDb(csvData).then( (isAllInserted)=>{
+                            if(isAllInserted){
+                                insertBulkDataInDb(csvData).then((res1)=>{
+                                    fs.unlink(fileName, (err) => {
+                                        if (err) {
+                                            console.error(err)
+                                        }
+                                    })
+
+                                    return res.status(200).send({data:"data Added Scussfully"});
+                                })
+                            } else{
+                                fs.unlink(fileName, (err) => {
+                                    if (err) {
+                                        console.error(err)
+                                    }
+                                })
+                                return res.status(201).send({data:"not able to add data"});
+                            }
+                        }).catch((err)=>{
+                            fs.unlink(fileName, (err) => {
+                                if (err) {
+                                    console.error(err)
+                                }
+                            })
+                            return res.status(201).send({data:"not able to add data"});
+                        })
+                    } else {
+                        console.log("called")
+                        fs.unlink(fileName, (err) => {
+                            if (err) {
+                                console.error(err)
+                            }
+                        })
+                        res.status(201).send({data:"invalid Excel File!"})
+                    }
+                });
+            },1000)
+        });
+
+    }catch (e) {
+        console.log(e)
+        fs.unlink(fileName, (err) => {
+            if (err) {
+                console.error(err)
+            }
+        })
+        res.status(201).send({data:"invalid Excel File!"})
+    }
+
+
+
+    // var obj = xlsx.parse("EXCEL" + '/EXCEL_1617119232601.xlsx');
+    // var obj = xlsx.parse(fs.readFileSync("EXCEL" + '/EXCEL_1617119232601.xlsx'));
+    // let csvData = [];
+    // csvData.push(obj[0].data[0])
+    //
+    // if(isDefined(csvData[0].AcNameEn) && isDefined(csvData[0].PollingAddressEn) && isDefined(csvData[0].Age) && isDefined(csvData[0].SectionNameEn) &&
+    //     isDefined(csvData[0].PartNameEn) && isDefined(csvData[0].RelationName)  && isDefined(csvData[0].RelayionType) && isDefined(csvData[0].Sex)
+    //     && isDefined(csvData[0].SectionNo) && isDefined(csvData[0].VoterId) && isDefined(csvData[0].VoterNameEn) && isDefined(csvData[0].VoterName)
+    // ){
+    //     res.send(csvData)
+    // } else {
+    //     res.status(201).send({data:"Invalid Excel File!"})
+    // }
+
+
+
+    // const request = http.get("https://firebasestorage.googleapis.com/v0/b/votingappproject-7cf3e.appspot.com/o/ExcelList%2F_pdf1617118565150.xlsx?alt=media&token=c2c14ecf-b26f-4bf9-a62b-947ef81e639f", function(response) {
+    //     response.pipe(file);
+    //
+    // });
+    // try{
+    //     const request = await http.get("https://firebasestorage.googleapis.com/v0/b/votingappproject-7cf3e.appspot.com/o/ExcelList%2F_pdf1617118565150.xlsx?alt=media&token=c2c14ecf-b26f-4bf9-a62b-947ef81e639f", async function(response) {
+    //         response.pipe(file).on("close",async ()=>{
+    //             const storeAsImage = fromPath(fileName, options);
+    //             const pageToConvertAsImage = 1;
+    //             await storeAsImage(pageToConvertAsImage).then((res) => {
+    //                 if(res){
+    //                     uploadImageOnFirebase("Images/"+imgName+".1.jpg").then((url)=>{
+    //                         if(url){
+    //                             console.log("url--",url)
+    //                             resolve(url[0])
+    //                         } else {
+    //                             console.log("called")
+    //                             resolve(false)
+    //                         }
+    //                     })
+    //                 } else {
+    //                     console.log("called this")
+    //                     resolve(false)
+    //                 }
+    //             }).catch((err)=>{
+    //                 console.log("err-",err)
+    //                 resolve(false)
+    //             });
+    //         });
+    //     });
+    // }  catch (e) {
+    //     resolve(false)
+    // }
+
+
+    // insertBulkDataInDb(req.body.csvData).then( (isAllInserted)=>{
+    //     if(isAllInserted){
+    //         insertBulkDataInDb(req.body.csvData).then((res1)=>{
+    //             insertBulkDataInDb(req.body.csvData).then((res2)=>{
+    //                 return res.status(200).send({data:"data Added Scussfully"});
+    //             })
+    //         })
+    //     } else{
+    //         return res.status(201).send({data:"not able to add data"});
+    //     }
+    // }).catch((err)=>{
+    //     return res.status(201).send({data:"not able to add data"});
+    // })
 
 });
 

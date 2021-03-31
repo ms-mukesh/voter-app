@@ -1243,6 +1243,7 @@ const getSpecificMemberDetailForUpdate = async (memberId) => {
             attributeList = [];
         }
     );
+    console.log(memberArrayForProfile[0])
     const finalArray = {
         UserData: memberArrayForProfile[0],
         SearchData: tempSearchData,
@@ -3487,6 +3488,7 @@ const checkMemberExistAndEnterDetails = (obj) =>{
                 }).catch((err)=>{
                     resolve(false)
                 })
+                resolve(false)
             }
         }).catch((err)=>{
             console.log("err-",err)
@@ -3657,6 +3659,77 @@ const insertBulkDataInDb = (dataArray) =>{
                         let isMemberCreated = await checkMemberExistAndEnterDetails(insMemberObj);
                         updateCounter = updateCounter + 1;
                         if(updateCounter >= arrayLength-1){
+                            return resolve(true)
+                        }
+                    }
+                })
+            }
+        }
+    })
+}
+
+const insertBulkDataInDbForWeb = (dataArray) =>{
+    let insvidhanSabhaId = null;
+    let insboothId = null;
+    let inspollingStationId = null;
+    let insfamilyId = null;
+    let insparentId = null;
+    let insaddressId = null;
+    return new Promise(async (resolve)=>{
+        let tempArray = []
+        let arrayLength = dataArray.length
+        await dataArray.map((item)=>{
+            tempArray.push({...item,Address:item.HouseNoEN+","+item.SectionNameEn})
+        })
+        tempArray = await loadash.groupBy(tempArray, "Address");
+        let updateCounter = 0;
+        for (const key in tempArray) {
+            if (tempArray.hasOwnProperty(key)) {
+                const value = tempArray[key];
+                insaddressId = await getAddressID(key);
+                insfamilyId = await getFamilyId(insaddressId);
+                const result = value.map(async (memberDetail)=>{
+                    if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
+                        isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
+                        && isDefined(memberDetail.VoterId)  && isDefined(memberDetail.SectionNo) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
+                    ){
+                        insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
+                        insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.SectionNo);
+                        inspollingStationId = await getPollingBoothStationId(memberDetail.PollingAddressEn);
+                        insparentId = await getParentId(memberDetail.RelationName,memberDetail.Age,insaddressId,memberDetail.RelayionType.toLowerCase() === 'f'?true:false);
+                        let insMemberObj = {
+                            FirstName:memberDetail.VoterNameEn,
+                            MiddleName:memberDetail.RelationName,
+                            Age:memberDetail.Age,
+                            Gender:memberDetail.Sex.toLowerCase() ==='m'?'male':'female',
+                            VoterVotingId:memberDetail.VoterId,
+                            FamilyId:insfamilyId,
+                            BoothId:insboothId,
+                            VidhanSabhaId:insvidhanSabhaId,
+                            PollingStationId:inspollingStationId,
+                            VoterHindiName:memberDetail.VoterName
+                        }
+                        if(memberDetail.RelayionType.toLowerCase() === 'f'){
+                            insMemberObj = {...insMemberObj,FatherId:insparentId}
+                        } else {
+                            insMemberObj = {...insMemberObj,SpouseId:insparentId}
+                        }
+                        let newMemberObj = [];
+                        let isMemberCreated = await checkMemberExistAndEnterDetails(insMemberObj);
+                        // if(!isMemberCreated){
+                        //     newMemberObj.push(insMemberObj)
+                        // }
+                        updateCounter = updateCounter + 1;
+                        if(updateCounter >= arrayLength-1){
+                            // voterMaster.bulkCreate([...newMemberObj]).then((isNewMemberCreated)=>{
+                            //     if(isNewMemberCreated){
+                            //         resolve(true)
+                            //     } else {
+                            //         resolve(false)
+                            //     }
+                            // }).catch((err)=>{
+                            //     resolve(false)
+                            // })
                             return resolve(true)
                         }
                     }
@@ -4048,5 +4121,6 @@ module.exports = {
     getPollingBoothStationId,
     getVidhanSabhaId,
     getAddressID,
-    addAllAdress
+    addAllAdress,
+    insertBulkDataInDbForWeb
 };
