@@ -20,7 +20,7 @@ const env_var = {
         HOST: "139.59.1.188",
         USER: "root_admin",
         PASSWORD: "Abcdef123!@#",
-        DB: "community_db",
+        DB: "community_db_banti",
         // firebaseAdmin: admin,
         dialect: "mysql",
         pool: {
