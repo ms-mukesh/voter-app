@@ -3631,14 +3631,22 @@ const insertBulkDataInDb = (dataArray) =>{
                 insaddressId = await getAddressID(key);
                 insfamilyId = await getFamilyId(insaddressId);
                 const result = value.map(async (memberDetail)=>{
-                    if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
-                        isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
-                        && isDefined(memberDetail.VoterId)  && isDefined(memberDetail.SectionNo) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
-                    ){
-                        insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
-                        insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.SectionNo);
-                        inspollingStationId = await getPollingBoothStationId(memberDetail.PollingAddressEn);
-                        insparentId = await getParentId(memberDetail.RelationName,memberDetail.Age,insaddressId,memberDetail.RelayionType.toLowerCase() === 'f'?true:false);
+                    // if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
+                    //     isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
+                    //     && isDefined(memberDetail.VoterId)  && isDefined(memberDetail.SectionNo) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
+                    // ){
+                        if(isDefined(memberDetail.AcNameEn)){
+                            insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
+                        }
+                        if(isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.SectionNo)){
+                            insboothId = await getBoothId(memberDetail.PartNameEn,memberDetail.SectionNo);
+                        }
+                        if(isDefined(memberDetail.PollingAddressEn)){
+                            inspollingStationId = await getPollingBoothStationId(memberDetail.PollingAddressEn);
+                        }
+                        if(isDefined(memberDetail.RelationName) && isDefined(memberDetail.Age) && isDefined(memberDetail.RelayionType) ){
+                            insparentId = await getParentId(memberDetail.RelationName,memberDetail.Age,insaddressId,memberDetail.RelayionType.toLowerCase() === 'f'?true:false);
+                        }
                         let insMemberObj = {
                             FirstName:memberDetail.VoterNameEn,
                             MiddleName:memberDetail.RelationName,
@@ -3661,7 +3669,7 @@ const insertBulkDataInDb = (dataArray) =>{
                         if(updateCounter >= arrayLength-1){
                             return resolve(true)
                         }
-                    }
+                    // }
                 })
             }
         }
