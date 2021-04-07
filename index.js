@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 });
 app.get("/", (req, res) => res.send("Hello World!"));
 app.use("/userAuthentication", userAuthentication);
-app.use(tokenChecker);
+// app.use(tokenChecker);
 app.use("/userActions", userActions);
 app.use("/notification", notification);
 app.use("/event", event);
