@@ -3058,24 +3058,27 @@ const getSpecificMemberDetail = async (memberId) => {
             ],
         })
         .then(async (res) => {
+            // console.log("data--",res)
 
 
             if (res.length > 0) {
-                condition = {
-                    VoterId: {
-                        [Op.eq]: res[0].dataValues.FamilyMaster.dataValues.HeadId,
-                    },
-                };
-                let tempHeadName = "-"
-                await voterMaster.findOne({ where: condition }).then((headName) => {
-                    if (headName) {
-                        const head = headName.dataValues;
-                        tempHeadName = `${head.FirstName} ${head.MiddleName} ${head.LastName}`;
-                    }
-                }).catch((err)=>{
-                    console.log("--err",err)
-                });
+                console.log("called")
+                // condition = {
+                //     VoterId: {
+                //         [Op.eq]: res[0].dataValues.FamilyMaster.dataValues.HeadId,
+                //     },
+                // };
+                // let tempHeadName = "-"
+                // await voterMaster.findOne({ where: condition }).then((headName) => {
+                //     if (headName) {
+                //         const head = headName.dataValues;
+                //         tempHeadName = `${head.FirstName} ${head.MiddleName} ${head.LastName}`;
+                //     }
+                // }).catch((err)=>{
+                //     console.log("--err",err)
+                // });
                 const tempData = res[0].dataValues;
+                // console.log("temp data--",tempData)
                 let outputObj = {};
                 outputObj = {
                     ...outputObj,
@@ -3148,7 +3151,7 @@ const getSpecificMemberDetail = async (memberId) => {
                             ? checkForValue(tempData.OccupationMaster.Name)
                             : "-",
 
-                    FamilyHeadName: tempHeadName,
+                    FamilyHeadName: '',
                     homePincode:
                         tempData.FamilyMaster &&
                         tempData.FamilyMaster != null &&
@@ -3162,12 +3165,14 @@ const getSpecificMemberDetail = async (memberId) => {
                             : "-",
                     ProfileImage: checkForValue(tempData.ProfileImage),
                 };
-                console.log(outputObj.Occupations)
+                console.log("ocuupation data--",outputObj.Occupations)
                 outputMemberArray.push(outputObj);
+                console.log("data---",outputMemberArray)
                 return { Data: outputMemberArray, next_endpoint: nextUrl };
             }
         })
         .catch((err) => {
+            console.log("errr",err)
             return { Data: outputMemberArray, next_endpoint: nextUrl };
         });
     if (outputMemberArray.length !== 0) {
