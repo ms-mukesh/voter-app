@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4708ad95-a20b-4ba5-b50b-d2c71b44237b" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/handler/common/commonMethods.js" beforeDir="false" afterPath="$PROJECT_DIR$/handler/common/commonMethods.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/voterData.js" beforeDir="false" afterPath="$PROJECT_DIR$/handler/voterData.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -18,8 +19,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/routes/userActions.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="128" column="23" lean-forward="true" selection-start-line="128" selection-start-column="23" selection-end-line="128" selection-end-column="23" />
+            <state relative-caret-position="215">
+              <caret line="536" column="26" selection-start-line="536" selection-start-column="26" selection-end-line="536" selection-end-column="26" />
               <folding>
                 <element signature="e#22863#23015#0" />
               </folding>
@@ -48,8 +49,17 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/handler/voterData.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="166">
-              <caret line="3153" column="37" selection-start-line="3153" selection-start-column="37" selection-end-line="3153" selection-end-column="37" />
+            <state relative-caret-position="154">
+              <caret line="2221" column="11" lean-forward="true" selection-start-line="2221" selection-start-column="11" selection-end-line="2221" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/handler/common/commonMethods.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="146">
+              <caret line="744" lean-forward="true" selection-start-line="744" selection-end-line="744" />
             </state>
           </provider>
         </entry>
@@ -74,7 +84,9 @@
       <find>getAllMem</find>
       <find>getAll</find>
       <find>getSpecificMemberDetail</find>
+      <find>updateUserProfile</find>
       <find>addB</find>
+      <find>update</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -98,6 +110,7 @@
         <option value="$PROJECT_DIR$/routes/event.js" />
         <option value="$PROJECT_DIR$/models/MLAMaster.model.js" />
         <option value="$PROJECT_DIR$/config/dbConfig.js" />
+        <option value="$PROJECT_DIR$/handler/common/commonMethods.js" />
         <option value="$PROJECT_DIR$/handler/voterData.js" />
       </list>
     </option>
@@ -185,7 +198,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17143000" />
+    <option name="totallyTimeSpent" value="18364000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="17" y="23" width="1005" height="678" extended-state="0" />
@@ -203,7 +216,7 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="9" sideWeight="0.6585366" visible="true" weight="0.36177474" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" sideWeight="0.6585366" visible="true" weight="0.42662117" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.34146342" side_tool="true" weight="0.36348122" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -313,18 +326,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/routes/userActions.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="128" column="23" lean-forward="true" selection-start-line="128" selection-start-column="23" selection-end-line="128" selection-end-column="23" />
+        <state relative-caret-position="215">
+          <caret line="536" column="26" selection-start-line="536" selection-start-column="26" selection-end-line="536" selection-end-column="26" />
           <folding>
             <element signature="e#22863#23015#0" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/handler/common/commonMethods.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="146">
+          <caret line="744" lean-forward="true" selection-start-line="744" selection-end-line="744" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/handler/voterData.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="166">
-          <caret line="3153" column="37" selection-start-line="3153" selection-start-column="37" selection-end-line="3153" selection-end-column="37" />
+        <state relative-caret-position="154">
+          <caret line="2221" column="11" lean-forward="true" selection-start-line="2221" selection-start-column="11" selection-end-line="2221" selection-end-column="11" />
         </state>
       </provider>
     </entry>

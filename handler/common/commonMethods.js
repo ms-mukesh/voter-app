@@ -737,7 +737,14 @@ const getAllVolunteerId = () =>{
 const getIdFromTable = (tableName, condition) => {
     return new Promise((resolve) => {
         tableName.findAll({ where: condition }).then((res) => {
-            return resolve(res);
+            if(res && res.length>0){
+                return resolve(res);
+            } else {
+                return resolve(false)
+            }
+
+        }).catch((err)=>{
+            return resolve(false)
         });
     });
 };

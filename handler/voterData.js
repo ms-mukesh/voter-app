@@ -2190,46 +2190,40 @@ const updateUserProfile = async (memberId, userDataObj) => {
         const message = "";
         const userOriginalData = [];
         let role = "NORMAL";
-        // await getUserRole(memberId).then((userRole) => {
-        //     role = userRole;
-        // });
-
-        console.log(userDataObj)
-
         await getSpecificMemberDetail(memberId).then((res) => {
             userOriginalData.push(res.Data[0]);
         });
         condition = {
             VoterId: { [Op.eq]: `${memberId}` },
         };
-        // await getMemberIdFromTable(memberMaster, condition).then((res) => {
-        //   memberSize = res.length;
-        // });
-        // if (memberSize === 0) {
-        //   flag = 1;
-        //   return resolve(false);
-        // }
-
-
         await getIdFromTable(voterMaster, condition).then((res) => {
+
             if (res.length === 0) {
                 flag = 1;
             }
-            familyId = res[0].dataValues.FamilyId;
+            if(res){
+                familyId = res[0].dataValues.FamilyId;
+            } else {
+                familyId = null;
+            }
+
         });
 
         condition = {
             FamilyId: { [Op.eq]: `${familyId}` },
         };
         await getIdFromTable(familyMaster, condition).then((res) => {
-            if (res.length === 0) {
-                flag = 1;
-            }
-            addressId = res[0].dataValues.ResidenceAddressId;
+           if(res){
+               addressId = res[0].dataValues.ResidenceAddressId;
+           } else {
+               addressId = null
+           }
+
         });
 
         tempData = userDataObj.MemberName;
-        console.log("update obj--",userDataObj)
+        console.log("reached--")
+
         updateValuesForMemberMaster = {
             FirstName: checkForValueForUpdate(tempData.FirstName),
             MiddleName: checkForValueForUpdate(tempData.MiddleName),
