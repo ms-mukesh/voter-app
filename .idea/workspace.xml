@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4708ad95-a20b-4ba5-b50b-d2c71b44237b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/handler/voterData.js" beforeDir="false" afterPath="$PROJECT_DIR$/handler/voterData.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/userActions.js" beforeDir="false" afterPath="$PROJECT_DIR$/routes/userActions.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -20,13 +18,16 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/routes/userActions.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="559">
-              <caret line="626" column="38" selection-start-line="626" selection-start-column="38" selection-end-line="626" selection-end-column="38" />
+            <state relative-caret-position="52">
+              <caret line="569" column="20" selection-start-line="569" selection-start-column="20" selection-end-line="569" selection-end-column="20" />
+              <folding>
+                <element signature="e#22863#23015#0" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config/dbConfig.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="135">
@@ -35,10 +36,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/index.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="215">
+            <state relative-caret-position="214">
               <caret line="41" selection-start-line="41" selection-end-line="41" />
             </state>
           </provider>
@@ -47,15 +48,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/handler/voterData.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="3633" column="17" selection-start-line="3633" selection-start-column="17" selection-end-line="3636" selection-end-column="25" />
-              <folding>
-                <element signature="e#193282#193338#0" />
-                <element signature="e#193503#193559#0" />
-                <element signature="e#193706#193762#0" />
-                <element signature="e#193983#194039#0" />
-                <element signature="e#193740#194391#0" />
-              </folding>
+            <state relative-caret-position="112">
+              <caret line="3636" column="25" lean-forward="true" selection-start-line="3636" selection-start-column="25" selection-end-line="3636" selection-end-column="25" />
             </state>
           </provider>
         </entry>
@@ -101,9 +95,9 @@
         <option value="$PROJECT_DIR$/routes/event.js" />
         <option value="$PROJECT_DIR$/models/MLAMaster.model.js" />
         <option value="$PROJECT_DIR$/config/dbConfig.js" />
-        <option value="$PROJECT_DIR$/index.js" />
         <option value="$PROJECT_DIR$/routes/userActions.js" />
         <option value="$PROJECT_DIR$/handler/voterData.js" />
+        <option value="$PROJECT_DIR$/index.js" />
       </list>
     </option>
   </component>
@@ -130,6 +124,11 @@
               <item name="voter-app" type="b2602c69:ProjectViewProjectNode" />
               <item name="voter-app" type="462c0819:PsiDirectoryNode" />
               <item name="config" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="voter-app" type="b2602c69:ProjectViewProjectNode" />
+              <item name="voter-app" type="462c0819:PsiDirectoryNode" />
+              <item name="EXCEL" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -186,16 +185,16 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17926000" />
+    <option name="totallyTimeSpent" value="17936000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="17" y="23" width="1005" height="678" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="npm" side_tool="true" />
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info id="npm" order="3" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" />
@@ -298,31 +297,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/index.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="41" selection-start-line="41" selection-end-line="41" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/handler/voterData.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="3633" column="17" selection-start-line="3633" selection-start-column="17" selection-end-line="3636" selection-end-column="25" />
-          <folding>
-            <element signature="e#193282#193338#0" />
-            <element signature="e#193503#193559#0" />
-            <element signature="e#193706#193762#0" />
-            <element signature="e#193983#194039#0" />
-            <element signature="e#193740#194391#0" />
-          </folding>
+        <state relative-caret-position="112">
+          <caret line="3636" column="25" lean-forward="true" selection-start-line="3636" selection-start-column="25" selection-end-line="3636" selection-end-column="25" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/routes/userActions.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="559">
-          <caret line="626" column="38" selection-start-line="626" selection-start-column="38" selection-end-line="626" selection-end-column="38" />
+        <state relative-caret-position="52">
+          <caret line="569" column="20" selection-start-line="569" selection-start-column="20" selection-end-line="569" selection-end-column="20" />
+          <folding>
+            <element signature="e#22863#23015#0" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -330,6 +318,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
           <caret line="21" column="19" selection-start-line="21" selection-start-column="19" selection-end-line="21" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="214">
+          <caret line="41" selection-start-line="41" selection-end-line="41" />
         </state>
       </provider>
     </entry>
