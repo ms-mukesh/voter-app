@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4708ad95-a20b-4ba5-b50b-d2c71b44237b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/voterData.js" beforeDir="false" afterPath="$PROJECT_DIR$/handler/voterData.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/userActions.js" beforeDir="false" afterPath="$PROJECT_DIR$/routes/userActions.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -18,29 +20,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/routes/userActions.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="52">
+            <state relative-caret-position="13656">
               <caret line="569" column="20" selection-start-line="569" selection-start-column="20" selection-end-line="569" selection-end-column="20" />
-              <folding>
-                <element signature="e#22863#23015#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/config/dbConfig.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="21" column="19" selection-start-line="21" selection-start-column="19" selection-end-line="21" selection-end-column="31" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/config/dbConfig.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="27" column="19" lean-forward="true" selection-start-line="27" selection-start-column="19" selection-end-line="27" selection-end-column="19" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/index.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="214">
-              <caret line="41" selection-start-line="41" selection-end-line="41" />
+            <state relative-caret-position="1008">
+              <caret line="42" column="39" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -48,8 +47,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/handler/voterData.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="112">
-              <caret line="3636" column="25" lean-forward="true" selection-start-line="3636" selection-start-column="25" selection-end-line="3636" selection-end-column="25" />
+            <state relative-caret-position="21024">
+              <caret line="876" column="67" selection-start-line="876" selection-start-column="67" selection-end-line="876" selection-end-column="67" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/handler/common/commonMethods.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="17760">
+              <caret line="740" selection-start-line="740" selection-end-line="740" />
             </state>
           </provider>
         </entry>
@@ -74,6 +82,11 @@
       <find>getAllMem</find>
       <find>getAll</find>
       <find>addB</find>
+      <find>getAllMemberInfo</find>
+      <find>addBu</find>
+      <find>send</find>
+      <find>checkMemberExistAndEnterDetails</find>
+      <find>searchD</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -94,10 +107,10 @@
         <option value="$PROJECT_DIR$/models/index.js" />
         <option value="$PROJECT_DIR$/routes/event.js" />
         <option value="$PROJECT_DIR$/models/MLAMaster.model.js" />
-        <option value="$PROJECT_DIR$/config/dbConfig.js" />
+        <option value="$PROJECT_DIR$/index.js" />
         <option value="$PROJECT_DIR$/routes/userActions.js" />
         <option value="$PROJECT_DIR$/handler/voterData.js" />
-        <option value="$PROJECT_DIR$/index.js" />
+        <option value="$PROJECT_DIR$/config/dbConfig.js" />
       </list>
     </option>
   </component>
@@ -181,17 +194,22 @@
       <workItem from="1611112517475" duration="253000" />
       <workItem from="1611112819873" duration="631000" />
       <workItem from="1617775225544" duration="1277000" />
+      <workItem from="1617941263832" duration="5070000" />
+      <workItem from="1618020288921" duration="976000" />
+      <workItem from="1618200834002" duration="7000" />
+      <workItem from="1618388881639" duration="645000" />
+      <workItem from="1618545835330" duration="1202000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17936000" />
+    <option name="totallyTimeSpent" value="33974000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="17" y="23" width="1005" height="678" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info id="npm" order="3" side_tool="true" />
@@ -204,7 +222,7 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
-      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.6585366" visible="true" weight="0.36177474" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" sideWeight="0.6585366" visible="true" weight="0.4641638" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.34146342" side_tool="true" weight="0.36348122" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -297,34 +315,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/handler/voterData.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="112">
-          <caret line="3636" column="25" lean-forward="true" selection-start-line="3636" selection-start-column="25" selection-end-line="3636" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/routes/userActions.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="52">
+        <state relative-caret-position="13656">
           <caret line="569" column="20" selection-start-line="569" selection-start-column="20" selection-end-line="569" selection-end-column="20" />
-          <folding>
-            <element signature="e#22863#23015#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/dbConfig.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="21" column="19" selection-start-line="21" selection-start-column="19" selection-end-line="21" selection-end-column="31" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/index.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="41" selection-start-line="41" selection-end-line="41" />
+        <state relative-caret-position="1008">
+          <caret line="42" column="39" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/handler/voterData.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="21024">
+          <caret line="876" column="67" selection-start-line="876" selection-start-column="67" selection-end-line="876" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/handler/common/commonMethods.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17760">
+          <caret line="740" selection-start-line="740" selection-end-line="740" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/dbConfig.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="27" column="19" lean-forward="true" selection-start-line="27" selection-start-column="19" selection-end-line="27" selection-end-column="19" />
         </state>
       </provider>
     </entry>

@@ -564,8 +564,6 @@ const getAllMembers = async (offset, pageNo,memberId) => {
                     sequelize.fn(
                         "concat",
                         sequelize.col("VoterMaster.FirstName"),
-                        sequelize.col("VoterMaster.MiddleName"),
-                        sequelize.col("VoterMaster.LastName")
                     ),
                     "ASC",
                 ],
@@ -877,8 +875,6 @@ const searchData = async (searchKey,memberId) => {
                         sequelize.fn(
                             "concat",
                             sequelize.col("VoterMaster.FirstName"),
-                            sequelize.col("VoterMaster.MiddleName"),
-                            sequelize.col("VoterMaster.LastName")
                         ),
                         "ASC",
                     ],
@@ -3486,6 +3482,7 @@ const checkMemberExistAndEnterDetails = (obj) =>{
                         resolve(false)
                     }
                 }).catch((err)=>{
+                    console.log("error",err)
                     resolve(false)
                 })
                 resolve(false)
@@ -3619,6 +3616,7 @@ const insertBulkDataInDb = (dataArray) =>{
     let insaddressId = null;
     return new Promise(async (resolve)=>{
         let tempArray = []
+        console.log("data coount---",dataArray.length)
         let arrayLength = dataArray.length
         await dataArray.map((item)=>{
             tempArray.push({...item,Address:item.HouseNoEN+","+item.SectionNameEn})
@@ -3630,11 +3628,7 @@ const insertBulkDataInDb = (dataArray) =>{
                 const value = tempArray[key];
                 insaddressId = await getAddressID(key);
                 insfamilyId = await getFamilyId(insaddressId);
-                const result = value.map(async (memberDetail)=>{
-                    // if(isDefined(memberDetail.AcNameEn) && isDefined(memberDetail.PollingAddressEn) && isDefined(memberDetail.Age) && isDefined(memberDetail.SectionNameEn) &&
-                    //     isDefined(memberDetail.PartNameEn) && isDefined(memberDetail.RelationName)  && isDefined(memberDetail.RelayionType) && isDefined(memberDetail.Sex)
-                    //     && isDefined(memberDetail.VoterId)  && isDefined(memberDetail.SectionNo) && isDefined(memberDetail.VoterNameEn) && isDefined(memberDetail.VoterName)
-                    // ){
+                const result = await value.map(async (memberDetail)=>{
                         if(isDefined(memberDetail.AcNameEn)){
                             insvidhanSabhaId = await getVidhanSabhaId(memberDetail.AcNameEn);
                         }
@@ -3667,10 +3661,11 @@ const insertBulkDataInDb = (dataArray) =>{
                         let isMemberCreated = await checkMemberExistAndEnterDetails(insMemberObj);
                         updateCounter = updateCounter + 1;
                         if(updateCounter >= arrayLength-1){
+                            console.log(updateCounter,"array lengt--",arrayLength)
                             return resolve(true)
                         }
-                    // }
                 })
+                // return resolve(true)
             }
         }
     })

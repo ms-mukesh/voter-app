@@ -570,9 +570,10 @@ router.post("/addBulkData", async (req, res) => {
     insertBulkDataInDb(req.body.csvData).then( (isAllInserted)=>{
         if(isAllInserted){
             insertBulkDataInDb(req.body.csvData).then((res1)=>{
-                insertBulkDataInDb(req.body.csvData).then((res2)=>{
-                    return res.status(200).send({data:"data Added Scussfully"});
-                })
+                return res.status(200).send({data:"data Added Scussfully"});
+                // insertBulkDataInDb(req.body.csvData).then((res2)=>{
+                //     return res.status(200).send({data:"data Added Scussfully"});
+                // })
             })
         } else{
             return res.status(201).send({data:"not able to add data"});
