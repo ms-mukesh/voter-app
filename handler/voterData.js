@@ -4134,6 +4134,50 @@ const insertBulkVoterList = (data) =>{
     })
 }
 
+const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
+   return new Promise(async (resolve)=>{
+       try{
+           let condition = {
+               electionId: { [Op.like]: searchKey },
+               boothId: { [Op.like]: searchKey },
+               voterName: { [Op.like]: searchKey },
+               village: { [Op.like]: searchKey },
+               voterCategory: { [Op.like]: searchKey },
+               mandalName: { [Op.like]: searchKey },
+               shaktiKendraName: { [Op.like]: searchKey },
+               phoneNumber: { [Op.like]: searchKey },
+               familyNumber:{[Op.like]: searchKey }
+           };
+           const voterList = await voter_list_master
+             .findAll({
+                 offset: pageNo,
+                 limit: limit,
+                 // attributes: VOTER_ATTRIBUTES,
+                 where:searchKey!==''? {
+                    [Op.or]:[{electionId:{[Op.like]:'%'+searchKey+'%'}},{voterName:{[Op.like]:'%'+searchKey+'%'}}, {boothId:{[Op.like]:'%'+searchKey+'%'}},{village:{[Op.like]:'%'+searchKey+'%'}}, {voterCategory:{[Op.like]:'%'+searchKey+'%'}},{mandalName:{[Op.like]:'%'+searchKey+'%'}},{shaktiKendraName:{[Op.like]:'%'+searchKey+'%'}},{phoneNumber:{[Op.like]:'%'+searchKey+'%'}}]
+                 }:{},
+                 order:
+                     [
+                         [
+                             sequelize.fn(
+                               "concat",
+                               sequelize.col("VoterListMaster.voterName"),
+                               "",
+                             ),
+                             "ASC",
+                         ],
+                     ],
+             })
+
+           return resolve(voterList)
+       }catch (ex){
+           console.log(ex)
+           return resolve(false)
+       }
+   })
+
+}
+
 
 
 module.exports = {
@@ -4176,5 +4220,6 @@ module.exports = {
     getAddressID,
     addAllAdress,
     insertBulkDataInDbForWeb,
-    insertBulkVoterList
+    insertBulkVoterList,
+    getVoterList
 };
