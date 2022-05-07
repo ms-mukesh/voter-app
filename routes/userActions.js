@@ -1,4 +1,6 @@
-const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData} = require("../handler/voterData");
+const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData,
+    insertBulkVoterList
+} = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
 const loadash = require("lodash")
@@ -24,7 +26,22 @@ const {
 const router = express.Router();
 const db = require("../models");
 const { Op } = db.Sequelize;
-const {addressMaster,familyMaster,voterMaster} = db
+const {addressMaster,familyMaster,voterMaster} = db;
+
+
+router.post("/insertBulkVoterList", async (request, response) => {
+    const req = request.body;
+    const addBulkMethodRes = await insertBulkVoterList(req.data);
+    if(addBulkMethodRes){
+        return response.status(200).send({ data: 'Data added!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to add data, please try again" });
+    }
+
+
+
+});
+
 router.post("/filterData", async (request, response) => {
     const req = request.body;
     let tokenData = null;

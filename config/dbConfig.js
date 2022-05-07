@@ -33,9 +33,9 @@ const env_var = {
     //     port: process.env.PORT || 3100,
     // },
     remoteTesting: {
-        HOST: "3.14.151.80",
-        USER: "mukesh_local",
-        PASSWORD: "mukesh2103",
+        HOST: "139.59.45.0",
+        USER: "viren",
+        PASSWORD: "password",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",

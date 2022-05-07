@@ -52,7 +52,8 @@ const {
     volunteer_election,
     volunteer_booth,
     polling_booth_master,
-    vidhanSabhaMaster
+    vidhanSabhaMaster,
+  voter_list_master
 } = db;
 
 let lastPage = 0;
@@ -4085,6 +4086,55 @@ const insertNewBooth = (boothData) =>{
     })
 }
 
+const insertBulkVoterList = (data) =>{
+    return new Promise(async (resolve)=>{
+       try {
+           if (data.length > 1 && data.length<1000) {
+               const header = data[0];
+               let headerObj = {};
+               header.map((item) => {
+                   headerObj = {...headerObj, [item]: item};
+               });
+               if (
+                 isDefined(headerObj?.electionId) &&
+                 isDefined(headerObj?.boothId) &&
+                 isDefined(headerObj?.voterName) &&
+                 isDefined(headerObj?.village) &&
+                 isDefined(headerObj?.voterCategory) &&
+                 isDefined(headerObj?.mandalName) &&
+                 isDefined(headerObj?.phoneNumber) &&
+                 isDefined(headerObj?.shaktiKendraName) &&
+                 isDefined(headerObj?.familyNumber) &&
+                 isDefined(headerObj?.dob)
+               ) {
+                   const dataWithoutHeader = data.slice(1,data.length);
+                   let inputObj = {};
+                   let inputObjArray = [];
+                   dataWithoutHeader.map((item)=>{
+                       item.map((rowData,index)=>{
+                           inputObj = {...inputObj,[header[index]]:rowData}
+                       })
+                       inputObjArray.push(inputObj)
+                   })
+                   const bulkInsertRes = await voter_list_master.bulkCreate(inputObjArray);
+                   if(bulkInsertRes){
+                       return resolve(true);
+                   } else {
+                       return resolve(false);
+                   }
+               } else {
+                   resolve(false)
+               }
+           } else {
+               resolve(false)
+           }
+       }catch(ex){
+           resolve(false)
+       }
+    })
+}
+
+
 
 module.exports = {
     insertNewBooth,
@@ -4125,5 +4175,6 @@ module.exports = {
     getVidhanSabhaId,
     getAddressID,
     addAllAdress,
-    insertBulkDataInDbForWeb
+    insertBulkDataInDbForWeb,
+    insertBulkVoterList
 };
