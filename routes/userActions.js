@@ -1,6 +1,7 @@
 const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData,
     insertBulkVoterList,
-    getVoterList
+    getVoterList,
+    updateVoterDetails
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -39,17 +40,24 @@ router.post("/insertBulkVoterList", async (request, response) => {
         return  response.status(201).send({ data: "Failed to add data, please try again" });
     }
 });
+router.post("/updateVoterDetails", async (request, response) => {
+    const req = request.body;
+    const updateDetailsMethodRes = await updateVoterDetails(req.data);
+    if(updateDetailsMethodRes){
+        return response.status(200).send({ data: 'Data updated!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to update data, please try again" });
+    }
+});
 
 router.get("/getVoterList/", async (request, response) => {
     const pageNo = isDefined(request.query.pageNo) ? request.query.pageNo : 1;
     const limit = isDefined(request.query.limit) ? request.query.limit : 50;
     const searchKey = isDefined(request.query.searchKey)?request.query.searchKey:'';
 
-    console.log(pageNo, limit, searchKey,request.query)
-
     const voterList = await getVoterList(parseInt(pageNo),parseInt(limit),searchKey);
     if(voterList){
-        response.status(200).send({ data: voterList });
+        response.status(200).send({ data: voterList.rows,count:voterList.count, maleCount:voterList.maleCount,femaleCount:voterList.femaleCount,otherCount:voterList.otherCount });
     } else {
         response.status(201).send({ data: 'data not found' });
     }

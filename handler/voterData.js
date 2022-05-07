@@ -4105,7 +4105,9 @@ const insertBulkVoterList = (data) =>{
                  isDefined(headerObj?.phoneNumber) &&
                  isDefined(headerObj?.shaktiKendraName) &&
                  isDefined(headerObj?.familyNumber) &&
-                 isDefined(headerObj?.dob)
+                 isDefined(headerObj?.dob) &&
+                 isDefined(headerObj?.gender)
+
                ) {
                    const dataWithoutHeader = data.slice(1,data.length);
                    let inputObj = {};
@@ -4149,7 +4151,7 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
                familyNumber:{[Op.like]: searchKey }
            };
            const voterList = await voter_list_master
-             .findAll({
+             .findAndCountAll({
                  offset: pageNo,
                  limit: limit,
                  // attributes: VOTER_ATTRIBUTES,
@@ -4168,14 +4170,55 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
                          ],
                      ],
              })
-
-           return resolve(voterList)
+           const maleCount = await voter_list_master
+             .count({
+                 where: {
+                     [Op.or]:[{gender:{[Op.like]:'male'}}]
+                 },
+             })
+           const femaleCount = await voter_list_master
+             .count({
+                 where: {
+                     [Op.or]:[{gender:{[Op.like]:'female'}}]
+                 },
+             })
+           const otherCount = await voter_list_master
+             .count({
+                 where: {
+                     [Op.or]:[{gender:{[Op.like]:'other'}}]
+                 },
+             })
+            const obj = {...voterList,maleCount,femaleCount,otherCount};
+           return resolve(obj)
        }catch (ex){
            console.log(ex)
            return resolve(false)
        }
    })
 
+}
+const updateVoterDetails = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+            console.log(obj)
+           if(isDefined(obj.voterUniqueId)){
+               let condition = {voterUniqueId: { [Op.eq]: `${obj.voterUniqueId}` }};
+               const updateVoterDetailsRes = await voter_list_master.update(obj,{where:condition});
+
+               if(updateVoterDetailsRes){
+                   return resolve(true)
+               } else {
+                   return resolve(false)
+               }
+
+           } else {
+               return resolve(false)
+           }
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
 }
 
 
@@ -4221,5 +4264,6 @@ module.exports = {
     addAllAdress,
     insertBulkDataInDbForWeb,
     insertBulkVoterList,
-    getVoterList
+    getVoterList,
+    updateVoterDetails
 };

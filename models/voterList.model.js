@@ -29,6 +29,12 @@ const VoterListMaster = sequelize.define(
           values: ["green", "red", "yellow"],
             allowNull: true,
         },
+      gender: {
+        type: Sequelize.ENUM,
+        values: ["male", "female", "other"],
+        allowNull: true,
+      },
+
         mandalName: {
             type: Sequelize.STRING,
             allowNull: true
