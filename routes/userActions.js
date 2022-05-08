@@ -1,7 +1,9 @@
 const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBooths,updateVoterElectionStatus,getVoterWhoDoesVote,getVoterWhoDoesNotVote,updateVolunteerElectionStatus,getVolunteerElection,getElectionWithoutVolunteer,getAllElectionList,addNewTemplate,getTemplateCategory,insertBulkDataInDb,searchData,filterData,getEventInformation,getSpecificMemberDetail,updateUserProfile,getFamilyTreeData,
     insertBulkVoterList,
     getVoterList,
-    updateVoterDetails
+    updateVoterDetails,
+    addNewElection,
+    updateElectionDetails
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -30,6 +32,25 @@ const db = require("../models");
 const { Op } = db.Sequelize;
 const {addressMaster,familyMaster,voterMaster} = db;
 
+router.post("/insertNewElectionDetails", async (request, response) => {
+    const req = request.body;
+    const addNewElectionRes = await addNewElection(req.data);
+    if(addNewElectionRes){
+        return response.status(200).send({ data: 'New Election details added!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to add election details, please try again" });
+    }
+});
+
+router.post("/updateElectionDetails", async (request, response) => {
+    const req = request.body;
+    const updateElectionDetailsRes = await updateElectionDetails(req.data);
+    if(updateElectionDetailsRes){
+        return response.status(200).send({ data: 'Election details updated!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to update election details, please try again" });
+    }
+});
 
 router.post("/insertBulkVoterList", async (request, response) => {
     const req = request.body;

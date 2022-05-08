@@ -4200,7 +4200,6 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
 const updateVoterDetails = (obj) => {
     return new Promise(async (resolve)=>{
         try{
-            console.log(obj)
            if(isDefined(obj.voterUniqueId)){
                let condition = {voterUniqueId: { [Op.eq]: `${obj.voterUniqueId}` }};
                const updateVoterDetailsRes = await voter_list_master.update(obj,{where:condition});
@@ -4221,9 +4220,51 @@ const updateVoterDetails = (obj) => {
     })
 }
 
+const addNewElection = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+                const addElectionDetails = await electionMaster.create(obj);
+                if(addElectionDetails){
+                    return resolve(true)
+                } else {
+                    return resolve(false)
+                }
+
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
+}
+
+const updateElectionDetails = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+            if(isDefined(obj.ElectionMasterId)){
+                let condition = {ElectionMasterId: { [Op.eq]: `${obj.ElectionMasterId}` }};
+                const updateElectionDetailsRes = await electionMaster.update(obj,{where:condition});
+
+                if(updateElectionDetailsRes){
+                    return resolve(true)
+                } else {
+                    return resolve(false)
+                }
+
+            } else {
+                return resolve(false)
+            }
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
+}
+
+
 
 
 module.exports = {
+
     insertNewBooth,
     getAllBooths,
     updateVoterElectionStatus,
@@ -4265,5 +4306,7 @@ module.exports = {
     insertBulkDataInDbForWeb,
     insertBulkVoterList,
     getVoterList,
-    updateVoterDetails
+    updateVoterDetails,
+    addNewElection,
+    updateElectionDetails
 };

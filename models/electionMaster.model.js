@@ -1,5 +1,5 @@
 const { Sequelize, sequelize } = require("../config/sequlize");
-const voterMaster = require("./voterMaster.model");
+
 const ElectionMaster = sequelize.define(
     "ElectionMaster",
     {
@@ -12,6 +12,22 @@ const ElectionMaster = sequelize.define(
             type: Sequelize.STRING,
             allowNull: true,
         },
+      AssemblyName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      LoksabhaName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      VidhanSabhaName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      CommisionOfficer: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
         ElectionDate :{
             type: Sequelize.DATE,
             allowNull: true,
@@ -25,8 +41,10 @@ const ElectionMaster = sequelize.define(
             allowNull: true,
         },
         ElectionType:{
-            type: Sequelize.STRING,
-            allowNull: true,
+          type: Sequelize.ENUM,
+          values: ["assembly", "loksabha", "panchayat","ward"],
+          allowNull: true,
+
         }
     },
     {
