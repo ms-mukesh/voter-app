@@ -3,7 +3,13 @@ const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBoo
     getVoterList,
     updateVoterDetails,
     addNewElection,
-    updateElectionDetails
+    updateElectionDetails,
+    getVoterListWhoHasVoted,
+    getVoterListWhoHasNotVoted,
+    addVoterDetailsForElectionMaster,
+    removeVoterDetailsForElectionMaster,
+    getFilterValuesForVoterList,
+    getFilterValuesForElectionList
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -70,6 +76,25 @@ router.post("/updateVoterDetails", async (request, response) => {
         return  response.status(201).send({ data: "Failed to update data, please try again" });
     }
 });
+router.post("/addVoterEntryForElectionMaster", async (request, response) => {
+    const req = request.body;
+    const updateDetailsMethodRes = await addVoterDetailsForElectionMaster(req.data);
+    if(updateDetailsMethodRes){
+        return response.status(200).send({ data: 'Data updated!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to update data, please try again" });
+    }
+});
+
+router.post("/removeVoterEntryForElectionMaster", async (request, response) => {
+    const req = request.body;
+    const updateDetailsMethodRes = await removeVoterDetailsForElectionMaster(req.data);
+    if(updateDetailsMethodRes){
+        return response.status(200).send({ data: 'Data updated!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to update data, please try again" });
+    }
+});
 
 router.get("/getVoterList/", async (request, response) => {
     const pageNo = isDefined(request.query.pageNo) ? request.query.pageNo : 1;
@@ -79,6 +104,35 @@ router.get("/getVoterList/", async (request, response) => {
     const voterList = await getVoterList(parseInt(pageNo),parseInt(limit),searchKey);
     if(voterList){
         response.status(200).send({ data: voterList.rows,count:voterList.count, maleCount:voterList.maleCount,femaleCount:voterList.femaleCount,otherCount:voterList.otherCount });
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+router.get("/getFilterKeywords/", async (request, response) => {
+    let voterFilterList = [];
+    let electionFilterList = [];
+    voterFilterList = await getFilterValuesForVoterList();
+    electionFilterList = await getFilterValuesForElectionList();
+    const obj = {
+        voterFilterList:voterFilterList,
+        electionFilterList:electionFilterList
+    }
+    response.status(200).send({ data: obj });
+});
+
+router.get("/getVoterListByElectionId/", async (request, response) => {
+    const electionId = isDefined(request.query.electionId) ? request.query.electionId : 1;
+    const isVoted = isDefined(request.query.isVoted) ? request.query.isVoted : 1;
+    const searchKey = isDefined(request.query.searchKey)?request.query.searchKey:'';
+    let voterList = [];
+    if(isVoted == 1){
+        voterList = await getVoterListWhoHasVoted(electionId,searchKey)
+    } else if(isVoted == 0){
+        voterList = await getVoterListWhoHasNotVoted(electionId,searchKey)
+    }
+    if(voterList){
+        response.status(200).send({ data: voterList});
     } else {
         response.status(201).send({ data: 'data not found' });
     }

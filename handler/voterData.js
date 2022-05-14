@@ -53,8 +53,11 @@ const {
     volunteer_booth,
     polling_booth_master,
     vidhanSabhaMaster,
-  voter_list_master
+  voter_list_master,
+  voterListElectionMaster
 } = db;
+
+
 
 let lastPage = 0;
 let totalMembers = 0;
@@ -4136,6 +4139,59 @@ const insertBulkVoterList = (data) =>{
     })
 }
 
+const getVoterListWhoHasVoted =  (electionId, searchKey = '') => {
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            if(isDefined(searchKey) && searchKey !=='' && searchKey!==null && searchKey.length>0){
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterName LIKE '%"+searchKey+"%' and voterUniqueId in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
+            } else {
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterUniqueId in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
+            }
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    resolve(votersList[0])
+                } else{
+                    resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve(false)
+                }
+            })
+        }catch (ex){
+            resolve(false)
+        }
+    })
+
+}
+const getVoterListWhoHasNotVoted =  (electionId, searchKey = '') => {
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            if(isDefined(searchKey) && searchKey !=='' && searchKey!==null && searchKey.length>0){
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterName LIKE '%"+searchKey+"%' and voterUniqueId not in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
+            } else {
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterUniqueId not in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
+            }
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    resolve(votersList[0])
+                } else{
+                    resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve(false)
+                }
+            })
+        }catch (ex){
+            resolve(false)
+        }
+    })
+
+}
+
 const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
    return new Promise(async (resolve)=>{
        try{
@@ -4213,6 +4269,81 @@ const updateVoterDetails = (obj) => {
            } else {
                return resolve(false)
            }
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
+}
+const getFilterValuesForVoterList =  () => {
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            qry = "SELECT distinct village,mandalName, shaktiKendraName, boothId, familyNumber FROM "+DATABASE_NAME+".VoterListMaster"
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    resolve(votersList[0])
+                } else{
+                    resolve([])
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve([])
+                }
+            })
+        }catch (ex){
+            resolve([])
+        }
+    })
+}
+const getFilterValuesForElectionList =  () => {
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            qry = "SELECT distinct ElectionName,AssemblyName, LoksabhaName, VidhanSabhaName FROM "+DATABASE_NAME+".ElectionMaster"
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    resolve(votersList[0])
+                } else{
+                    resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve(false)
+                }
+            })
+        }catch (ex){
+            resolve(false)
+        }
+    })
+}
+
+const addVoterDetailsForElectionMaster = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+                const finalObj = {...obj,dateTime:new Date().getTime()}
+                const updateVoterDetailsRes = await voterListElectionMaster.create(finalObj);
+                if(updateVoterDetailsRes){
+                    return resolve(true)
+                } else {
+                    return resolve(false)
+                }
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
+}
+const removeVoterDetailsForElectionMaster = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+            const condition = { VoterId: { [Op.eq]: obj.VoterId},ElectionId: { [Op.eq]: obj.ElectionId}};
+            const updateVoterDetailsRes = await voterListElectionMaster.destroy({where:condition});
+            if(updateVoterDetailsRes){
+                return resolve(true)
+            } else {
+                return resolve(false)
+            }
         }catch(ex){
             return resolve(false)
         }
@@ -4308,5 +4439,11 @@ module.exports = {
     getVoterList,
     updateVoterDetails,
     addNewElection,
-    updateElectionDetails
+    updateElectionDetails,
+    getVoterListWhoHasVoted,
+    getVoterListWhoHasNotVoted,
+    addVoterDetailsForElectionMaster,
+    removeVoterDetailsForElectionMaster,
+    getFilterValuesForVoterList,
+    getFilterValuesForElectionList
 };

@@ -36,4 +36,5 @@ db.survey_question_master = require("./surveyQuestionMaster.model");
 db.survey_answer_master = require("./survey_answer_master.model");
 db.polling_booth_master = require("./pollingBoothMaster.model");
 db.voter_list_master = require("./voterList.model");
+db.voterListElectionMaster = require("./voterListWithElectionMaster.model");
 module.exports = db;

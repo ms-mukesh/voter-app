@@ -11,7 +11,9 @@ const notification = require("./routes/notificationRoute")
 const event = require("./routes/event")
 const volunteer = require("./routes/volunteer")
 const survey = require("./routes/survey");
-const {insertBulkDataInDb,getAddressID,addAllAdress, insertBulkVoterList, getVoterList } = require("./handler/voterData")
+const {insertBulkDataInDb,getAddressID,addAllAdress, insertBulkVoterList, getVoterList, getVoterListWhoHasVoted,
+  getFilterValuesForVoterList, getFilterValuesForElectionList
+} = require("./handler/voterData")
 
 let tempArray = [ {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 75, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "PollingAddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "CHHOTU RAM ", "RelationName2": "छोटू राम ", "RelayionType": "F", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA,MAMADODA", "SectionNo": 1, "Sex": "M", "SlNo": 1, "VoterId": "AZB1038934", "VoterName": "बजरंग लाल ", "VoterNameEn": "BAJRANG LAL ", "contactno": ""},
   {"AcName": "डीडवाना", "AcNameEn": "Deedwana", "AcNo": 107, "Age": 68, "HouseNo": "1के", "HouseNoEN": "1K", "PartName": "नागौर", "PartNameEn": "Nagaur", "PartNo": 1, "PollingAddressEn": "SHAHEED HEMRAJ GOVERNMENT SENIOR SECONDARY SCHOOL  MAMRODA LEFT PART", "PollingAddress": "शहीद हेमराज राजकीय उच्च माध्यमिक विद्यालय  मामड़ोदा बांया भाग", "RelationName": "BAJRANG LAL ", "RelationName2": "बजरंग लाल ", "RelayionType": "H", "SectionName": "राजपूतों का मोहल्ला पश्चिमी,मामड़ोदा", "SectionNameEn": "RAJAPUTON KA MOHALLA PASHCHIMI,MAMADODA", "SectionNo": 1, "Sex": "F", "SlNo": 2, "VoterId": "AZB1038900", "VoterName": "केशर देवी ", "VoterNameEn": "KESHAR DEVI ", "contactno": ""},
