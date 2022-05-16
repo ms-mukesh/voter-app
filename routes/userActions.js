@@ -9,7 +9,9 @@ const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBoo
     addVoterDetailsForElectionMaster,
     removeVoterDetailsForElectionMaster,
     getFilterValuesForVoterList,
-    getFilterValuesForElectionList
+    getFilterValuesForElectionList,
+    getFilteredVoterList,
+    getVoterListByElectionFilteredList
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -104,6 +106,26 @@ router.get("/getVoterList/", async (request, response) => {
     const voterList = await getVoterList(parseInt(pageNo),parseInt(limit),searchKey);
     if(voterList){
         response.status(200).send({ data: voterList.rows,count:voterList.count, maleCount:voterList.maleCount,femaleCount:voterList.femaleCount,otherCount:voterList.otherCount });
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+router.post("/getFilteredVoterList/", async (request, response) => {
+    const req = request.body;
+    const voterList = await getFilteredVoterList(1,req.data);
+    if(voterList){
+        response.status(200).send({ data: voterList.rows,count:voterList.count });
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+router.post("/getFilteredVoterListByElection/", async (request, response) => {
+    const req = request.body;
+    const voterList = await getVoterListByElectionFilteredList(req.data);
+    if(voterList){
+        response.status(200).send({ data: voterList});
     } else {
         response.status(201).send({ data: 'data not found' });
     }

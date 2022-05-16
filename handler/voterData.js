@@ -4165,6 +4165,8 @@ const getVoterListWhoHasVoted =  (electionId, searchKey = '') => {
     })
 
 }
+
+
 const getVoterListWhoHasNotVoted =  (electionId, searchKey = '') => {
     return new Promise((resolve)=>{
         try {
@@ -4195,17 +4197,6 @@ const getVoterListWhoHasNotVoted =  (electionId, searchKey = '') => {
 const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
    return new Promise(async (resolve)=>{
        try{
-           let condition = {
-               electionId: { [Op.like]: searchKey },
-               boothId: { [Op.like]: searchKey },
-               voterName: { [Op.like]: searchKey },
-               village: { [Op.like]: searchKey },
-               voterCategory: { [Op.like]: searchKey },
-               mandalName: { [Op.like]: searchKey },
-               shaktiKendraName: { [Op.like]: searchKey },
-               phoneNumber: { [Op.like]: searchKey },
-               familyNumber:{[Op.like]: searchKey }
-           };
            const voterList = await voter_list_master
              .findAndCountAll({
                  offset: pageNo,
@@ -4392,6 +4383,71 @@ const updateElectionDetails = (obj) => {
 }
 
 
+const getVoterListByElectionFilteredList =  (obj = null) => {
+    let reqObj = obj;
+    console.log(reqObj)
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            if(reqObj.isVoted){
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where boothId LIKE '%"+reqObj.boothName+"%' and village LIKE '%"+reqObj.villageName+"%' and voterCategory LIKE '%"+reqObj.voterCategory+"%' and gender LIKE '%"+reqObj.gender+"%' and mandalName LIKE '%"+reqObj.mandalName+"%' and shaktiKendraName LIKE '%"+reqObj.shaktiKendraName+"%' and familyNumber LIKE '%"+reqObj.family+"%' and voterUniqueId in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+reqObj.electionId+")"
+            } else {
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where boothId LIKE '%"+reqObj.boothName+"%' and village LIKE '%"+reqObj.villageName+"%' and voterCategory LIKE '%"+reqObj.voterCategory+"%' and gender LIKE '%"+reqObj.gender+"%' and mandalName LIKE '%"+reqObj.mandalName+"%' and shaktiKendraName LIKE '%"+reqObj.shaktiKendraName+"%' and familyNumber LIKE '%"+reqObj.family+"%' and voterUniqueId not in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+reqObj.electionId+")"
+            }
+            console.log(qry)
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    resolve(votersList[0])
+                } else{
+                    resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve(false)
+                }
+            })
+        }catch (ex){
+            resolve(false)
+        }
+    })
+
+}
+const getFilteredVoterList =  (pageNo = 1,obj = null) => {
+    let reqObj = obj;
+
+    return new Promise(async (resolve)=>{
+        try{
+            const voterList = await voter_list_master
+              .findAndCountAll({
+                  offset: pageNo,
+                  // limit: limit,
+                  // attributes: VOTER_ATTRIBUTES,
+                  where: {
+                      [Op.or]:[{boothId:{[Op.like]:'%'+reqObj.boothName+'%'}},{village:{[Op.like]:'%'+reqObj.villageName+'%'}}, {voterCategory:{[Op.like]:'%'+reqObj.voterCategory+'%'}},{mandalName:{[Op.like]:'%'+reqObj.mandalName+'%'}},{shaktiKendraName:{[Op.like]:'%'+reqObj.shaktiKendraName+'%'}},{familyNumber:{[Op.like]:'%'+reqObj.family+'%'}},{gender:{[Op.like]:'%'+reqObj.gender+'%'}}]
+                  },
+                  order:
+                    [
+                        [
+                            sequelize.fn(
+                              "concat",
+                              sequelize.col("VoterListMaster.voterName"),
+                              "",
+                            ),
+                            "ASC",
+                        ],
+                    ],
+              })
+            const obj = {...voterList};
+            return resolve(obj)
+        }catch (ex){
+            console.log(ex)
+            return resolve(false)
+        }
+    })
+
+}
+
+
 
 
 module.exports = {
@@ -4445,5 +4501,7 @@ module.exports = {
     addVoterDetailsForElectionMaster,
     removeVoterDetailsForElectionMaster,
     getFilterValuesForVoterList,
-    getFilterValuesForElectionList
+    getFilterValuesForElectionList,
+    getFilteredVoterList,
+    getVoterListByElectionFilteredList
 };
