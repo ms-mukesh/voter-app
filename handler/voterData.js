@@ -10,7 +10,7 @@ const {
     DATABASE_NAME,
     VOLUNTEER,
     ADMIN,
-    NORMAL
+    NORMAL, JWT_PRIVATE_KEY
 } = require("./common/constants");
 const {getAllAdminMemberId,getAllVolunteerId,getUserRole,getMonthFromString,isDefined,checkForValue,checkForValueForUpdate,getIdFromTable,updateTableValue} = require("./common/commonMethods");
 const { fromPath } = require("pdf2pic")
@@ -31,6 +31,7 @@ let pageLimit = PAGE_LIMIT;
 const db = require("../models");
 
 const { sequelize } = require("../config/sequlize");
+const jwt = require("jsonwebtoken");
 const { Op } = db.Sequelize;
 const {
   voterMaster,
@@ -1305,7 +1306,7 @@ const decodeDataFromToken = (token) => {
     return new Promise((resolve) => {
         let tokenData = "";
         // eslint-disable-next-line consistent-return
-        jwt.verify(token, "", function (err, decoded) {
+        jwt.verify(token, JWT_PRIVATE_KEY, function (err, decoded) {
             if (err) {
                 return resolve(false);
             }
@@ -1315,11 +1316,10 @@ const decodeDataFromToken = (token) => {
     });
 };
 
-const getMemberIdFromToken = async (token) => {
-    return new Promise(() => {
-        decodeDataFromToken(token).then((res) => {
-            return res.memberId;
-        });
+const getMemberIdFromToken =  (token) => {
+    return new Promise(async (resolve) => {
+        const tokenData = await decodeDataFromToken(token);
+        return resolve(tokenData)
     });
 };
 
@@ -4140,7 +4140,7 @@ const insertBulkVoterList = (data) =>{
 }
 
 const getVoterListWhoHasVoted =  (electionId, searchKey = '') => {
-    return new Promise((resolve)=>{
+    return new Promise( (resolve)=>{
         try {
             let qry = ''
             if(isDefined(searchKey) && searchKey !=='' && searchKey!==null && searchKey.length>0){
@@ -4148,9 +4148,11 @@ const getVoterListWhoHasVoted =  (electionId, searchKey = '') => {
             } else {
                 qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterUniqueId in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
             }
-            sequelize.query(qry).then((votersList)=>{
+            sequelize.query(qry).then(async (votersList)=>{
                 if(votersList){
-                    resolve(votersList[0])
+                    const countQry = "SELECT count(*) FROM "+DATABASE_NAME+".VoterListMaster";
+                    const countQryRes = await sequelize.query(countQry);
+                    resolve({data:votersList[0],count:countQryRes[0]})
                 } else{
                     resolve(false)
                 }
@@ -4260,6 +4262,22 @@ const updateVoterDetails = (obj) => {
            } else {
                return resolve(false)
            }
+        }catch(ex){
+            return resolve(false)
+        }
+
+    })
+}
+
+const addVoterDetailsToVoterList = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+                const addVoterDetailsRes = await voter_list_master.create(obj);
+                if(addVoterDetailsRes){
+                    return resolve(true)
+                } else {
+                    return resolve(false)
+                }
         }catch(ex){
             return resolve(false)
         }
@@ -4385,7 +4403,6 @@ const updateElectionDetails = (obj) => {
 
 const getVoterListByElectionFilteredList =  (obj = null) => {
     let reqObj = obj;
-    console.log(reqObj)
     return new Promise((resolve)=>{
         try {
             let qry = ''
@@ -4414,31 +4431,47 @@ const getVoterListByElectionFilteredList =  (obj = null) => {
 }
 const getFilteredVoterList =  (pageNo = 1,obj = null) => {
     let reqObj = obj;
+    console.log("data--",reqObj)
 
     return new Promise(async (resolve)=>{
         try{
-            const voterList = await voter_list_master
-              .findAndCountAll({
-                  offset: pageNo,
-                  // limit: limit,
-                  // attributes: VOTER_ATTRIBUTES,
-                  where: {
-                      [Op.or]:[{boothId:{[Op.like]:'%'+reqObj.boothName+'%'}},{village:{[Op.like]:'%'+reqObj.villageName+'%'}}, {voterCategory:{[Op.like]:'%'+reqObj.voterCategory+'%'}},{mandalName:{[Op.like]:'%'+reqObj.mandalName+'%'}},{shaktiKendraName:{[Op.like]:'%'+reqObj.shaktiKendraName+'%'}},{familyNumber:{[Op.like]:'%'+reqObj.family+'%'}},{gender:{[Op.like]:'%'+reqObj.gender+'%'}}]
-                  },
-                  order:
-                    [
-                        [
-                            sequelize.fn(
-                              "concat",
-                              sequelize.col("VoterListMaster.voterName"),
-                              "",
-                            ),
-                            "ASC",
-                        ],
-                    ],
-              })
-            const obj = {...voterList};
-            return resolve(obj)
+            const qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where boothId LIKE '%"+reqObj.boothName+"%' and village LIKE '%"+reqObj.villageName+"%' and voterCategory LIKE '%"+reqObj.voterCategory+"%' and gender LIKE '%"+reqObj.gender+"%' and mandalName LIKE '%"+reqObj.mandalName+"%' and shaktiKendraName LIKE '%"+reqObj.shaktiKendraName+"%' and familyNumber LIKE '%"+reqObj.family+"%'"
+            console.log(qry)
+            sequelize.query(qry).then((votersList)=>{
+                if(votersList){
+                    console.log("res here--",votersList[0])
+                   return  resolve(votersList[0])
+                } else{
+                    return resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    return resolve(false)
+                }
+            })
+            // const voterList = await voter_list_master
+            //   .findAndCountAll({
+            //       offset: pageNo,
+            //       // limit: limit,
+            //       // attributes: VOTER_ATTRIBUTES,
+            //       where: {
+            //           [Op.and]:[{boothId:{[Op.like]:'%'+reqObj.boothName+'%'}},{village:{[Op.like]:'%'+reqObj.villageName+'%'}}, {voterCategory:{[Op.like]:'%'+reqObj.voterCategory+'%'}},{mandalName:{[Op.like]:'%'+reqObj.mandalName+'%'}},{shaktiKendraName:{[Op.like]:'%'+reqObj.shaktiKendraName+'%'}},{familyNumber:{[Op.like]:'%'+reqObj.family+'%'}},{gender:{[Op.like]:'%'+reqObj.gender+'%'}}]
+            //       },
+            //       order:
+            //         [
+            //             [
+            //                 sequelize.fn(
+            //                   "concat",
+            //                   sequelize.col("VoterListMaster.voterName"),
+            //                   "",
+            //                 ),
+            //                 "ASC",
+            //             ],
+            //         ],
+            //   })
+            // console.log(voterList)
+            // const obj = {...voterList};
+            // return resolve(obj)
         }catch (ex){
             console.log(ex)
             return resolve(false)
@@ -4447,11 +4480,30 @@ const getFilteredVoterList =  (pageNo = 1,obj = null) => {
 
 }
 
+const getMyProfileDetailsFromVoterList =  (token = '') => {
+    return new Promise(async (resolve)=>{
+        try{
+            const memberId = await getMemberIdFromToken(token);
+            if(memberId){
+                const memberData = await voter_list_master.findByPk(memberId.voterId);
+                if(memberData){
+                    return resolve(memberData)
+                } else {
+                    return resolve(false)
+                }
+            } else {
+                return resolve(false)
+            }
+        }catch (ex){
+            return resolve(false)
+        }
+    })
+}
+
 
 
 
 module.exports = {
-
     insertNewBooth,
     getAllBooths,
     updateVoterElectionStatus,
@@ -4503,5 +4555,7 @@ module.exports = {
     getFilterValuesForVoterList,
     getFilterValuesForElectionList,
     getFilteredVoterList,
-    getVoterListByElectionFilteredList
+    getVoterListByElectionFilteredList,
+    addVoterDetailsToVoterList,
+    getMyProfileDetailsFromVoterList
 };

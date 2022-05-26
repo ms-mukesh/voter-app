@@ -11,7 +11,9 @@ const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBoo
     getFilterValuesForVoterList,
     getFilterValuesForElectionList,
     getFilteredVoterList,
-    getVoterListByElectionFilteredList
+    getVoterListByElectionFilteredList,
+    addVoterDetailsToVoterList,
+    getMyProfileDetailsFromVoterList
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -69,6 +71,16 @@ router.post("/insertBulkVoterList", async (request, response) => {
         return  response.status(201).send({ data: "Failed to add data, please try again" });
     }
 });
+
+router.post("/addVoterDetails", async (request, response) => {
+    const req = request.body;
+    const addDetailsMethodRes = await addVoterDetailsToVoterList(req.data);
+    if(addDetailsMethodRes){
+        return response.status(200).send({ data: 'Data added!' });
+    } else {
+        return  response.status(201).send({ data: "Failed to add data, please try again" });
+    }
+});
 router.post("/updateVoterDetails", async (request, response) => {
     const req = request.body;
     const updateDetailsMethodRes = await updateVoterDetails(req.data);
@@ -114,8 +126,9 @@ router.get("/getVoterList/", async (request, response) => {
 router.post("/getFilteredVoterList/", async (request, response) => {
     const req = request.body;
     const voterList = await getFilteredVoterList(1,req.data);
+    console.log("voter list---",voterList)
     if(voterList){
-        response.status(200).send({ data: voterList.rows,count:voterList.count });
+        response.status(200).send({ data: voterList });
     } else {
         response.status(201).send({ data: 'data not found' });
     }
@@ -149,12 +162,27 @@ router.get("/getVoterListByElectionId/", async (request, response) => {
     const searchKey = isDefined(request.query.searchKey)?request.query.searchKey:'';
     let voterList = [];
     if(isVoted == 1){
+
         voterList = await getVoterListWhoHasVoted(electionId,searchKey)
     } else if(isVoted == 0){
         voterList = await getVoterListWhoHasNotVoted(electionId,searchKey)
     }
+    console.log(voterList.count)
     if(voterList){
-        response.status(200).send({ data: voterList});
+        response.status(200).send({ data: voterList.data,count:voterList.count});
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+
+
+
+router.get("/getMyProfileDetails/", async (request, response) => {
+    const token = request.headers.token;
+   const profileData = await getMyProfileDetailsFromVoterList(token)
+    if(profileData){
+        response.status(200).send({ data: profileData});
     } else {
         response.status(201).send({ data: 'data not found' });
     }
