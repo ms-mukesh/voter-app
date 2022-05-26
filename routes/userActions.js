@@ -162,9 +162,9 @@ router.get("/getVoterListByElectionId/", async (request, response) => {
     const searchKey = isDefined(request.query.searchKey)?request.query.searchKey:'';
     let voterList = [];
     if(isVoted == 1){
-
         voterList = await getVoterListWhoHasVoted(electionId,searchKey)
     } else if(isVoted == 0){
+        console.log("called--")
         voterList = await getVoterListWhoHasNotVoted(electionId,searchKey)
     }
     console.log(voterList.count)

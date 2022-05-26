@@ -4178,9 +4178,11 @@ const getVoterListWhoHasNotVoted =  (electionId, searchKey = '') => {
             } else {
                 qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterUniqueId not in(select VoterId from "+DATABASE_NAME+".VoterListElectionMaster where ElectionId="+electionId+")"
             }
-            sequelize.query(qry).then((votersList)=>{
+            sequelize.query(qry).then(async (votersList)=>{
                 if(votersList){
-                    resolve(votersList[0])
+                    const countQry = "SELECT count(*) FROM "+DATABASE_NAME+".VoterListMaster";
+                    const countQryRes = await sequelize.query(countQry);
+                    resolve({data:votersList[0],count:countQryRes[0]})
                 } else{
                     resolve(false)
                 }
