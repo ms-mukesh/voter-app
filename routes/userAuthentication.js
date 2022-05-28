@@ -2,7 +2,7 @@ const express = require("express");
 const db = require("../models");
 const router = express.Router();
 const { Op } = db.Sequelize;
-const {voterMaster} = db
+const {voterMaster, voter_list_master} = db
 const {addTokenToTable,generateAccessToken,removeToken,decodeDataFromAccessToken} = require('../handler/utils')
 const {NETWORK_FAILED_MESSAGE} = require('../handler/common/constants')
 const {changeUserPassword} = require("../handler/voterData")
@@ -119,6 +119,77 @@ router.post(
                             }).catch((err)=>{
                                  return response.status(200).send({ data: dataForResponse });
                              })
+                        } else{
+                            return response.status(201).send({ data: NETWORK_FAILED_MESSAGE });
+                        }
+                    })
+                } else {
+                    return response.status(201).send({ data: NETWORK_FAILED_MESSAGE });
+                }
+            })
+
+            // return response.status(200).send({ data: member });
+        } catch (ex) {
+            response.status(500).send(ex);
+        }
+    }
+);
+router.post(
+    "/memberLogin/v2/",
+    (request, response, next) => {
+        if (!request.body.email)
+            return response
+                .status(401)
+                .send({ data: "please provide valid login id" });
+        else if(!request.body.password)
+            return response
+                .status(401)
+                .send({ data: "please provide valid login password" });
+        next();
+    },
+    async function (request, response) {
+        const req = request.body;
+        try {
+            const { email,password } = req;
+            const condition = { email: { [Op.eq]: `${email}` },password:{ [Op.eq]: `${password}` }};
+            console.log(condition)
+            const member = await voter_list_master.findAll({
+                where: condition,
+                attributes: [
+                    "voterUniqueId",
+                    "voterName",
+                    "dob",
+                    "email",
+                    "password",
+                   "gender",
+                  "voterType"
+                ],
+            }).catch((err)=>{
+                console.log("error--",err)
+                return response.status(201).send({ data: "Invalid Login Details" });
+            });
+            console.log(member.length)
+            if (member.length === 0) {
+                return response.status(201).send({ data: "Invalid Login Details" });
+            }
+            const payLoadDataForAccessToken = {
+                voterId : member[0].dataValues.voterUniqueId,
+                mailId : email
+            }
+            console.log(payLoadDataForAccessToken)
+
+            generateAccessToken(payLoadDataForAccessToken).then((accessToken)=>{
+                if(accessToken){
+                    let dataForResponse = {
+                        voterId:member[0].dataValues.voterUniqueId,
+                        name : member[0].dataValues.voterName,
+                        gender : member[0].dataValues.gender,
+                        accessToken : accessToken,
+                        role:member[0].dataValues.voterType
+                    }
+                    addTokenToTable(member[0].dataValues.voterUniqueId,accessToken).then(async (addtoken)=>{
+                        if(addtoken){
+                            return response.status(200).send({ data: dataForResponse });
                         } else{
                             return response.status(201).send({ data: NETWORK_FAILED_MESSAGE });
                         }

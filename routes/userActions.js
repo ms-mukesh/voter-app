@@ -115,8 +115,10 @@ router.get("/getVoterList/", async (request, response) => {
     const pageNo = isDefined(request.query.pageNo) ? request.query.pageNo : 1;
     const limit = isDefined(request.query.limit) ? request.query.limit : 50;
     const searchKey = isDefined(request.query.searchKey)?request.query.searchKey:'';
+    const minAge = isDefined(request.query.minAge)?request.query.minAge:1;
+    const maxAge = isDefined(request.query.maxAge)?request.query.maxAge:150;
 
-    const voterList = await getVoterList(parseInt(pageNo),parseInt(limit),searchKey);
+    const voterList = await getVoterList(parseInt(pageNo),parseInt(limit),searchKey,minAge,maxAge);
     if(voterList){
         response.status(200).send({ data: voterList.rows,count:voterList.count, maleCount:voterList.maleCount,femaleCount:voterList.femaleCount,otherCount:voterList.otherCount });
     } else {

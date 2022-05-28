@@ -114,7 +114,39 @@ const removeToken = async (token) => {
         }
     });
 };
+function addOrSubstractDate(dt, amount, dateType) {
+    switch (dateType) {
+        case 'days':
+            return dt.setDate(dt.getDate() + amount) && dt;
+        case 'weeks':
+            return dt.setDate(dt.getDate() + (7 * amount)) && dt;
+        case 'months':
+            return dt.setMonth(dt.getMonth() + amount) && dt;
+        case 'years':
+            return dt.setFullYear( dt.getFullYear() + amount) && dt;
+    }
+}
+const getFormattedDate = (date = '') => {
+    try {
+        if (date !== '') {
+            const dateString = new Date(date);
+            let dateFormat =
+              dateString.getDate() +
+              '-' +
+              (dateString.getMonth() + 1) +
+              '-' +
+              dateString.getFullYear();
+            return dateFormat.includes('NaN') ? date : dateFormat;
+        } else {
+            return '';
+        }
+    } catch (ex) {
+        return '';
+    }
+};
 module.exports={
+    getFormattedDate,
+    addOrSubstractDate,
     addTokenToTable,
     generateAccessToken,
     decodeDataFromAccessToken,

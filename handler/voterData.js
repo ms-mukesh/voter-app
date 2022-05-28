@@ -32,6 +32,7 @@ const db = require("../models");
 
 const { sequelize } = require("../config/sequlize");
 const jwt = require("jsonwebtoken");
+const { addOrSubstractDate, getFormattedDate } = require("./utils");
 const { Op } = db.Sequelize;
 const {
   voterMaster,
@@ -4223,16 +4224,22 @@ const getVolunteerListForVoter =  (isForVoter = true,shaktiKendraName = '',manda
     })
 }
 
-const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
+const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=150) => {
    return new Promise(async (resolve)=>{
        try{
+           const minAgeDate = addOrSubstractDate(new Date(), parseInt(-minAge), 'years');
+           const maxAgeDate = addOrSubstractDate(new Date(), parseInt(-maxAge), 'years');
+           // minAgeDate = getFormattedDate(minAgeDate);
+           console.log("data--",minAgeDate,maxAgeDate)
+
            const voterList = await voter_list_master
              .findAndCountAll({
                  offset: pageNo,
                  limit: limit,
                  // attributes: VOTER_ATTRIBUTES,
                  where:searchKey!==''? {
-                    [Op.or]:[{electionId:{[Op.like]:'%'+searchKey+'%'}},{voterName:{[Op.like]:'%'+searchKey+'%'}}, {boothId:{[Op.like]:'%'+searchKey+'%'}},{village:{[Op.like]:'%'+searchKey+'%'}}, {voterCategory:{[Op.like]:'%'+searchKey+'%'}},{mandalName:{[Op.like]:'%'+searchKey+'%'}},{shaktiKendraName:{[Op.like]:'%'+searchKey+'%'}},{phoneNumber:{[Op.like]:'%'+searchKey+'%'}}]
+                    [Op.or]:[{electionId:{[Op.like]:'%'+searchKey+'%'}},{voterName:{[Op.like]:'%'+searchKey+'%'}}, {boothId:{[Op.like]:'%'+searchKey+'%'}},{village:{[Op.like]:'%'+searchKey+'%'}}, {voterCategory:{[Op.like]:'%'+searchKey+'%'}},{mandalName:{[Op.like]:'%'+searchKey+'%'}},{shaktiKendraName:{[Op.like]:'%'+searchKey+'%'}},{phoneNumber:{[Op.like]:'%'+searchKey+'%'}}],
+                     [Op.and]:[{dob:{[Op.gte]:minAgeDate}}]
                  }:{},
                  order:
                      [
