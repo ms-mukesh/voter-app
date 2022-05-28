@@ -51,6 +51,14 @@ const VoterListMaster = sequelize.define(
           type: Sequelize.STRING,
           allowNull: true
         },
+      password:{
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      email:{
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       dob: {
         type: Sequelize.DATE,
         allowNull:true
