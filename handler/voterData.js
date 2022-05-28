@@ -4195,7 +4195,32 @@ const getVoterListWhoHasNotVoted =  (electionId, searchKey = '') => {
             resolve(false)
         }
     })
+}
 
+const getVolunteerListForVoter =  (isForVoter = true,shaktiKendraName = '',mandalName = '',familyNumber = '',village = '',boothId = '',voterType = 'volunteer') => {
+    return new Promise((resolve)=>{
+        try {
+            let qry = ''
+            if(isForVoter){
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where (shaktiKendraName LIKE '%"+shaktiKendraName+"%' or mandalName LIKE '%"+mandalName+"%' or familyNumber LIKE '%"+familyNumber+"%' or village LIKE '%"+village+"%' or boothId LIKE '%"+boothId+"%') and  voterType LIKE '%"+voterType+"%' "
+            } else {
+                qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterType LIKE '%"+voterType+"%' "
+            }
+            sequelize.query(qry).then(async (votersList)=>{
+                if(votersList){
+                    resolve({data:votersList[0]})
+                } else{
+                    resolve(false)
+                }
+            }).catch((err)=>{
+                if(err){
+                    resolve(false)
+                }
+            })
+        }catch (ex){
+            resolve(false)
+        }
+    })
 }
 
 const getVoterList =  (pageNo = 1, limit = 50, searchKey = '') => {
@@ -4559,5 +4584,6 @@ module.exports = {
     getFilteredVoterList,
     getVoterListByElectionFilteredList,
     addVoterDetailsToVoterList,
-    getMyProfileDetailsFromVoterList
+    getMyProfileDetailsFromVoterList,
+    getVolunteerListForVoter
 };

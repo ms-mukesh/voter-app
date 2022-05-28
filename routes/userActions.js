@@ -13,7 +13,8 @@ const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBoo
     getFilteredVoterList,
     getVoterListByElectionFilteredList,
     addVoterDetailsToVoterList,
-    getMyProfileDetailsFromVoterList
+    getMyProfileDetailsFromVoterList,
+    getVolunteerListForVoter
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -170,6 +171,21 @@ router.get("/getVoterListByElectionId/", async (request, response) => {
     console.log(voterList.count)
     if(voterList){
         response.status(200).send({ data: voterList.data,count:voterList.count});
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+router.get("/getVolunteerListForVoters/", async (request, response) => {
+    const isForVoter = isDefined(request.query.isForVoter) ? request.query.isForVoter : false;
+    const shaktiKendraName = isDefined(request.query.shaktiKendraName) ? request.query.shaktiKendraName : '';
+    const mandalName = isDefined(request.query.mandalName) ? request.query.mandalName : '';
+    const familyNumber = isDefined(request.query.familyNumber) ? request.query.familyNumber : '';
+    const village = isDefined(request.query.village) ? request.query.village : '';
+    const boothId = isDefined(request.query.boothId) ? request.query.boothId : '';
+    const volunteerList = await getVolunteerListForVoter(isForVoter,shaktiKendraName,mandalName,familyNumber,village,boothId)
+    if(volunteerList){
+        response.status(200).send({ data: volunteerList.data});
     } else {
         response.status(201).send({ data: 'data not found' });
     }

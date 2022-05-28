@@ -55,7 +55,11 @@ const VoterListMaster = sequelize.define(
         type: Sequelize.DATE,
         allowNull:true
       },
-
+      voterType: {
+        type: Sequelize.ENUM,
+        values: ["normal", "volunteer", "admin"],
+        allowNull: true,
+      },
     },
     {
         freezeTableName: true,
