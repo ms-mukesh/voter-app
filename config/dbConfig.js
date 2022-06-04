@@ -33,8 +33,8 @@ const env_var = {
     //     port: process.env.PORT || 3100,
     // },
     remoteTesting: {
-        HOST: "139.59.45.0",
-        USER: "viren",
+        HOST: "localhost",
+        USER: "mukesh",
         PASSWORD: "password",
         DB: "community_db",
         // firebaseAdmin: admin,
@@ -61,6 +61,22 @@ const env_var = {
             idle: 10000,
         },
         port: process.env.PORT || 3101,
+    },
+    ec2RemoteDb: {
+        HOST: "139.59.45.0",
+        USER: "viren",
+        PASSWORD: "password",
+        DB: "community_db",
+        // firebaseAdmin: admin,
+        dialect: "mysql",
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+        },
+
+        port: process.env.PORT || 3100,
     },
 };
 
