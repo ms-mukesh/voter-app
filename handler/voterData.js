@@ -4100,17 +4100,17 @@ const insertBulkVoterList = (data) =>{
                    headerObj = {...headerObj, [item]: item};
                });
                if (
-                 isDefined(headerObj?.electionId) &&
-                 isDefined(headerObj?.boothId) &&
-                 isDefined(headerObj?.voterName) &&
-                 isDefined(headerObj?.village) &&
-                 isDefined(headerObj?.voterCategory) &&
-                 isDefined(headerObj?.mandalName) &&
-                 isDefined(headerObj?.phoneNumber) &&
-                 isDefined(headerObj?.shaktiKendraName) &&
-                 isDefined(headerObj?.familyNumber) &&
-                 isDefined(headerObj?.dob) &&
-                 isDefined(headerObj?.gender)
+                 isDefined(headerObj.electionId) &&
+                 isDefined(headerObj.boothId) &&
+                 isDefined(headerObj.voterName) &&
+                 isDefined(headerObj.village) &&
+                 isDefined(headerObj.voterCategory) &&
+                 isDefined(headerObj.mandalName) &&
+                 isDefined(headerObj.phoneNumber) &&
+                 isDefined(headerObj.shaktiKendraName) &&
+                 isDefined(headerObj.familyNumber) &&
+                 isDefined(headerObj.dob) &&
+                 isDefined(headerObj.gender)
 
                ) {
                    const dataWithoutHeader = data.slice(1,data.length);
