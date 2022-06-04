@@ -4230,7 +4230,6 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=15
            const minAgeDate = addOrSubstractDate(new Date(), parseInt(-minAge), 'years');
            const maxAgeDate = addOrSubstractDate(new Date(), parseInt(-maxAge), 'years');
            // minAgeDate = getFormattedDate(minAgeDate);
-           console.log("data--",minAgeDate,maxAgeDate)
 
            const voterList = await voter_list_master
              .findAndCountAll({
@@ -4278,6 +4277,66 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=15
            return resolve(false)
        }
    })
+
+}
+const getDashboardCounts =  () => {
+    return new Promise(async (resolve)=>{
+        try{
+            let resObj = null
+            const genderRatioDetailsQry = "SELECT count(*) as count,gender FROM "+DATABASE_NAME+".VoterListMaster group by gender";
+            const genderRatioDetails = await  sequelize.query(genderRatioDetailsQry)
+            if(genderRatioDetails){
+                resObj = {...resObj,genderRatio:genderRatioDetails[0]}
+            }
+            const totalMemberQry = "SELECT count(*) as totalMember FROM "+DATABASE_NAME+".VoterListMaster";
+            const totalMemberDetails = await  sequelize.query(totalMemberQry)
+            if(totalMemberDetails){
+                resObj = {...resObj,totalMember:totalMemberDetails[0]}
+            }
+
+            const dobDetailsQry = "SELECT EXTRACT(year from dob) as year FROM "+DATABASE_NAME+".VoterListMaster GROUP BY EXTRACT(year FROM dob)";
+            const dobDetails = await  sequelize.query(dobDetailsQry)
+            const currentYear = new Date().getFullYear();
+            if(totalMemberDetails){
+                const plus18tp35Members = dobDetails[0].filter(function(itm){
+                    return currentYear - itm.year>=18 && currentYear - itm.year<=35 && itm.year!==null
+                });
+                const plus36tp50Members = dobDetails[0].filter(function(itm){
+                    return currentYear - itm.year>=36 && currentYear - itm.year<=50 && itm.year!==null
+                });
+                const plus50Member = dobDetails[0].filter(function(itm){
+                    return currentYear - itm.year>=51 && itm.year!==null
+                });
+                const correctAgeNotAvailableMember = dobDetails[0].filter(function(itm){
+                    return currentYear - itm.year<18 || itm.year===null
+                });
+
+                resObj = {...resObj,dobDetails:dobDetails[0],plus18tp35Members,plus36tp50Members,plus50Member,correctAgeNotAvailableMember}
+            }
+            const voterCategoryDetailsQry = "SELECT count(*) as count,voterCategory FROM "+DATABASE_NAME+".VoterListMaster group by voterCategory";
+            const voterCategoryDetails = await  sequelize.query(voterCategoryDetailsQry)
+            if(voterCategoryDetails){
+                resObj = {...resObj,voterCategoryRatio:voterCategoryDetails[0]}
+            }
+            const familyDetailsQry = "SELECT distinct familyNumber FROM "+DATABASE_NAME+".VoterListMaster";
+            const familyDetails = await  sequelize.query(familyDetailsQry)
+            if(familyDetails){
+                resObj = {...resObj,familyDetails:familyDetails[0].length}
+            }
+            const electionDetailQry = "SELECT distinct ElectionName FROM "+DATABASE_NAME+".ElectionMaster";
+            const electionDetails = await  sequelize.query(electionDetailQry)
+            if(electionDetails){
+                resObj = {...resObj,electionDetails:electionDetails[0].length}
+            }
+            if(resObj!==null){
+                return resolve(resObj)
+            }
+            return resolve(false)
+        }catch (ex){
+            console.log(ex)
+            return resolve(false)
+        }
+    })
 
 }
 const updateVoterDetails = (obj) => {
@@ -4592,5 +4651,6 @@ module.exports = {
     getVoterListByElectionFilteredList,
     addVoterDetailsToVoterList,
     getMyProfileDetailsFromVoterList,
-    getVolunteerListForVoter
+    getVolunteerListForVoter,
+    getDashboardCounts
 };

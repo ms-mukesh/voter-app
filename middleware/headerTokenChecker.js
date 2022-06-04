@@ -22,7 +22,7 @@ app.use(async (request, response, next) => {
           memberData.MemberToken === "" ||
           memberData.MemberToken === null
         ) {
-          console.log("called")
+
           return response.status(200).send({
             data: "Not Authorized Member",
             errCode: 401,
