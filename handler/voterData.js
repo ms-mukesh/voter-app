@@ -4238,7 +4238,7 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=15
                  // attributes: VOTER_ATTRIBUTES,
                  where:searchKey!==''? {
                     [Op.or]:[{electionId:{[Op.like]:'%'+searchKey+'%'}},{voterName:{[Op.like]:'%'+searchKey+'%'}}, {boothId:{[Op.like]:'%'+searchKey+'%'}},{village:{[Op.like]:'%'+searchKey+'%'}}, {voterCategory:{[Op.like]:'%'+searchKey+'%'}},{mandalName:{[Op.like]:'%'+searchKey+'%'}},{shaktiKendraName:{[Op.like]:'%'+searchKey+'%'}},{phoneNumber:{[Op.like]:'%'+searchKey+'%'}}],
-                     [Op.and]:[{dob:{[Op.gte]:minAgeDate}}]
+                     // [Op.and]:[{dob:{[Op.gte]:minAgeDate}}]
                  }:{},
                  order:
                      [
