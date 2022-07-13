@@ -49,7 +49,7 @@ app.use("/notification", notification);
 app.use("/event", event);
 app.use("/volunteer", volunteer);
 app.use("/survey", survey);
-getDashboardCounts().then((res)=>{})
+// getDashboardCounts().then((res)=>{})
 
 
 app.listen(process.env.PORT || 3000, function(){
