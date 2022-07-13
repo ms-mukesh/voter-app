@@ -1,9 +1,9 @@
-const cenv = "remoteTesting";
+const cenv = "localTesting";
 const env_var = {
     localTesting: {
         HOST: "localhost",
         USER: "root",
-        PASSWORD: "password",
+        PASSWORD: "Mukesh@123",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",
@@ -63,9 +63,9 @@ const env_var = {
         port: process.env.PORT || 3101,
     },
     ec2RemoteDb: {
-        HOST: "139.59.45.0",
-        USER: "viren",
-        PASSWORD: "password",
+        HOST: "167.71.235.234",
+        USER: "root",
+        PASSWORD: "Mukesh@123",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",
