@@ -64,8 +64,8 @@ const env_var = {
     },
     ec2RemoteDb: {
         HOST: "167.71.235.234",
-        USER: "root",
-        PASSWORD: "Mukesh@123",
+        USER: "viren",
+        PASSWORD: "password",
         DB: "community_db",
         // firebaseAdmin: admin,
         dialect: "mysql",
