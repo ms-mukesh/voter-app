@@ -43,13 +43,13 @@ app.use((req, res, next) => {
 });
 app.get("/", (req, res) => res.send("Hello World!"));
 app.use("/userAuthentication", userAuthentication);
-app.use(tokenChecker);
+// app.use(tokenChecker);
 app.use("/userActions", userActions);
 app.use("/notification", notification);
 app.use("/event", event);
 app.use("/volunteer", volunteer);
 app.use("/survey", survey);
-// getDashboardCounts().then((res)=>{})
+// getDashboardCounts().then((res)=>{console.log("data--",res)})
 
 
 app.listen(process.env.PORT || 3000, function(){

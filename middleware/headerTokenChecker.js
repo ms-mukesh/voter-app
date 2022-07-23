@@ -8,6 +8,7 @@ const app = express();
 app.use(async (request, response, next) => {
   if (request.headers.token) {
     decodeDataFromAccessToken(request.headers.token).then(async (res) => {
+      console.log(request.headers.token)
       if (res) {
         const tokenData = res;
         const condition = { VoterId: { [Op.eq]: `${tokenData.voterId}` } };

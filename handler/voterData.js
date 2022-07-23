@@ -4093,7 +4093,7 @@ const insertNewBooth = (boothData) =>{
 const insertBulkVoterList = (data) =>{
     return new Promise(async (resolve)=>{
        try {
-           if (data.length > 1 && data.length<1000) {
+           if (data.length > 1 && data.length<20000) {
                const header = data[0];
                let headerObj = {};
                header.map((item) => {
