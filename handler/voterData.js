@@ -4339,6 +4339,115 @@ const getDashboardCounts =  () => {
     })
 
 }
+
+const sendBroadCastMessageToVoters = (obj) => {
+    return new Promise(async (resolve)=>{
+        try{
+            const message = obj.message;
+            const category = obj.category;
+            const BROADCAST_MESSAGE_CATEGORY = {
+                allMale: 'allMale',
+                allFemale: 'allFemale',
+                ageFrom18To35: 'ageFrom18To35',
+                ageFrom36To60: 'ageFrom36To60',
+                age60Plus: 'age60Plus',
+                all: 'all',
+            };
+            const allMemberIndex = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.all);
+            if(allMemberIndex>=0){
+                const qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where phoneNumber !='' and phoneNumber is not null"
+                const voterList = await sequelize.query(qry)
+                if(voterList){
+                    const tempVoterList = voterList[0];
+                    let msg91Array = [];
+                    tempVoterList.map((item)=>{
+                        msg91Array.push({
+                            name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                            number:item.phoneNumber
+                        })
+                    })
+                    msg91Array = removeDuplicates(msg91Array,'number')
+                    return resolve(msg91Array)
+                } else {
+                    return resolve(false)
+                }
+            }else {
+                const qry = "SELECT EXTRACT(year from dob) as year,voterName,phoneNumber,gender FROM "+DATABASE_NAME+".VoterListMaster where phoneNumber !='' and phoneNumber is not null"
+                const voterList = await sequelize.query(qry)
+                if(voterList){
+                    const tempVoterList = voterList[0];
+                    const allMale = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.allMale);
+                    const allFemale = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.allFemale);
+                    const ageFrom18To35 = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.ageFrom18To35);
+                    const ageFrom36To60 = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.ageFrom36To60);
+                    const ageFrom60Plus = category.findIndex((item)=>item === BROADCAST_MESSAGE_CATEGORY.age60Plus);
+                    let msg91Array = [];
+                    const currentYear = new Date().getFullYear();
+                    if(allMale>=0){
+                        tempVoterList.map((item)=>{
+                            if(item.gender === 'male'){
+                                msg91Array.push({
+                                    name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                                    number:item.phoneNumber
+                                })
+                            }
+                        })
+                    }
+                    if(allFemale>=0){
+                        tempVoterList.map((item)=>{
+                            if(item.gender === 'female'){
+                                msg91Array.push({
+                                    name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                                    number:item.phoneNumber
+                                })
+                            }
+                        })
+                    }
+                    if(ageFrom18To35>=0){
+                        tempVoterList.map((item)=>{
+                            if(currentYear - item.year>=18 && currentYear - item.year<=35 && item.year!==null){
+                                msg91Array.push({
+                                    name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                                    number:item.phoneNumber
+                                })
+                            }
+                        })
+                    }
+                    if(ageFrom36To60>=0){
+                        tempVoterList.map((item)=>{
+                            if(currentYear - item.year>=36 && currentYear - item.year<=60 && item.year!==null){
+                                msg91Array.push({
+                                    name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                                    number:item.phoneNumber
+                                })
+                            }
+                        })
+                    }
+                    if(ageFrom60Plus){
+                        tempVoterList.map((item)=>{
+                            if(currentYear - item.year>=60 && item.year!==null){
+                                msg91Array.push({
+                                    name:"Namste! "+item.voterName.toString().trim()+", "+message,
+                                    number:item.phoneNumber
+                                })
+                            }
+                        })
+                    }
+                    msg91Array = removeDuplicates(msg91Array,'number');
+                    console.log("msg91Array,",msg91Array)
+                    return resolve(msg91Array)
+                } else {
+                    return resolve(false)
+                }
+            }
+        }catch(ex){
+            console.log(ex)
+            return resolve(false)
+        }
+    })
+
+
+}
 const updateVoterDetails = (obj) => {
     return new Promise(async (resolve)=>{
         try{
@@ -4652,5 +4761,6 @@ module.exports = {
     addVoterDetailsToVoterList,
     getMyProfileDetailsFromVoterList,
     getVolunteerListForVoter,
-    getDashboardCounts
+    getDashboardCounts,
+    sendBroadCastMessageToVoters
 };

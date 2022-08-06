@@ -15,7 +15,8 @@ const {insertBulkDataInDbForWeb,getAllInclunecerMembers,insertNewBooth,getAllBoo
     addVoterDetailsToVoterList,
     getMyProfileDetailsFromVoterList,
     getVolunteerListForVoter,
-    getDashboardCounts
+    getDashboardCounts,
+    sendBroadCastMessageToVoters
 } = require("../handler/voterData");
 const {getUserRole,sort_by_key,fetchAllBoothName,fetchAllTrustFactor,fetchAllOccupation,getAllNativePlace,fetchAllCastName,fetchAllNativePlace,fetchAllRegion,getAllFamilyWiseDetails,getAllCast,isDefined,getCastIdFromCastName,getNativePlaceIdFromCastName} = require("../handler/common/commonMethods")
 const {decodeDataFromAccessToken} = require("../handler/utils")
@@ -131,6 +132,16 @@ router.get("/getDashboardDetails/", async (request, response) => {
     const dashboardDetails = await getDashboardCounts();
     if(dashboardDetails){
         response.status(200).send({ data: dashboardDetails });
+    } else {
+        response.status(201).send({ data: 'data not found' });
+    }
+});
+
+router.post("/sendBroadCastMessage/", async (request, response) => {
+    const req = request.body;
+    const voterList = await sendBroadCastMessageToVoters(req.data);
+    if(voterList){
+        response.status(200).send({ data: voterList });
     } else {
         response.status(201).send({ data: 'data not found' });
     }

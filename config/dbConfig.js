@@ -1,4 +1,4 @@
-const cenv = "localTesting";
+const cenv = "ec2RemoteDb";
 const env_var = {
     localTesting: {
         HOST: "localhost",
