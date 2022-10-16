@@ -4208,6 +4208,7 @@ const getVolunteerListForVoter =  (isForVoter = true,shaktiKendraName = '',manda
                 qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where voterType LIKE '%"+voterType+"%' "
             }
             sequelize.query(qry).then(async (votersList)=>{
+                console.log("votersList0---", votersList)
                 if(votersList){
                     resolve({data:votersList[0]})
                 } else{

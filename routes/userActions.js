@@ -203,7 +203,7 @@ router.get("/getVoterListByElectionId/", async (request, response) => {
 });
 
 router.get("/getVolunteerListForVoters/", async (request, response) => {
-    const isForVoter = isDefined(request.query.isForVoter) ? request.query.isForVoter : false;
+    const isForVoter = isDefined(request.query.isForVoter) ? request.query.isForVoter !== 'false' : false;
     const shaktiKendraName = isDefined(request.query.shaktiKendraName) ? request.query.shaktiKendraName : '';
     const mandalName = isDefined(request.query.mandalName) ? request.query.mandalName : '';
     const familyNumber = isDefined(request.query.familyNumber) ? request.query.familyNumber : '';
