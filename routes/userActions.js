@@ -84,6 +84,9 @@ router.post("/addVoterDetails", async (request, response) => {
         return  response.status(201).send({ data: "Failed to add data, please try again" });
     }
 });
+
+
+
 router.post("/updateVoterDetails", async (request, response) => {
     const req = request.body;
     const updateDetailsMethodRes = await updateVoterDetails(req.data);

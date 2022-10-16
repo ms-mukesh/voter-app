@@ -4,9 +4,10 @@ const router = express.Router();
 const { Op } = db.Sequelize;
 const {voterMaster, voter_list_master} = db
 const {addTokenToTable,generateAccessToken,removeToken,decodeDataFromAccessToken} = require('../handler/utils')
-const {NETWORK_FAILED_MESSAGE} = require('../handler/common/constants')
-const {changeUserPassword} = require("../handler/voterData")
+const {NETWORK_FAILED_MESSAGE, DATABASE_NAME } = require('../handler/common/constants')
+const {changeUserPassword, addVoterDetailsToVoterList } = require("../handler/voterData")
 const {getUserRole} = require("../handler/common/commonMethods")
+const { sequelize } = require("../config/sequlize");
 router.post(
     "/changePassword",
     function (request, response, next) {
@@ -205,6 +206,27 @@ router.post(
         }
     }
 );
+router.post("/signupUserV2", async (request, response) => {
+    const req = request.body;
+    console.log(req)
+    const qry = "SELECT * FROM "+DATABASE_NAME+".VoterListMaster where email LIKE '%"+req.email+"%'"
+    const checkDataRes = await sequelize.query(qry)
+    if(checkDataRes){
+        if(checkDataRes[0].length>0){
+            return  response.status(201).send({ data: "This email is already register with us" });
+        } else {
+            const addDetailsMethodRes = await addVoterDetailsToVoterList(req);
+            if(addDetailsMethodRes){
+                return response.status(200).send({ data: 'Data added!' });
+            }else {
+                return  response.status(201).send({ data: "Failed to add data, please try again" });
+            }
+        }
+    }else {
+        return  response.status(201).send({ data: "Failed to add data, please try again" });
+
+    }
+});
 
 router.post(
     "/forceLogout",

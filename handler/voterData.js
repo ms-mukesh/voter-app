@@ -4486,6 +4486,7 @@ const addVoterDetailsToVoterList = (obj) => {
 
     })
 }
+
 const getFilterValuesForVoterList =  () => {
     return new Promise((resolve)=>{
         try {
