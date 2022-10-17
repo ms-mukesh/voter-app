@@ -4238,8 +4238,9 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=15
                  // attributes: VOTER_ATTRIBUTES,
                  where:searchKey!==''? {
                     [Op.or]:[{electionId:{[Op.like]:'%'+searchKey+'%'}},{voterName:{[Op.like]:'%'+searchKey+'%'}}, {boothId:{[Op.like]:'%'+searchKey+'%'}},{village:{[Op.like]:'%'+searchKey+'%'}}, {voterCategory:{[Op.like]:'%'+searchKey+'%'}},{mandalName:{[Op.like]:'%'+searchKey+'%'}},{shaktiKendraName:{[Op.like]:'%'+searchKey+'%'}},{phoneNumber:{[Op.like]:'%'+searchKey+'%'}}],
-                     // [Op.and]:[{dob:{[Op.gte]:minAgeDate}}]
-                 }:{},
+                 }:{
+                     [Op.or]:[{voterType:null},{voterType:'normal'}]
+                 },
                  order:
                      [
                          [
@@ -4255,13 +4256,13 @@ const getVoterList =  (pageNo = 1, limit = 50, searchKey = '',minAge=1,maxAge=15
            const maleCount = await voter_list_master
              .count({
                  where: {
-                     [Op.or]:[{gender:{[Op.like]:'male'}}]
+                     [Op.or]:[{gender:{[Op.like]:'male'}},{gender:{[Op.like]:'m'}},{gender:{[Op.like]:'M'}}]
                  },
              })
            const femaleCount = await voter_list_master
              .count({
                  where: {
-                     [Op.or]:[{gender:{[Op.like]:'female'}}]
+                     [Op.or]:[{gender:{[Op.like]:'female'}},{gender:{[Op.like]:'f'}},{gender:{[Op.like]:'F'}}]
                  },
              })
            const otherCount = await voter_list_master
@@ -4283,18 +4284,18 @@ const getDashboardCounts =  () => {
     return new Promise(async (resolve)=>{
         try{
             let resObj = null
-            const genderRatioDetailsQry = "SELECT count(*) as count,gender FROM "+DATABASE_NAME+".VoterListMaster group by gender";
+            const genderRatioDetailsQry = "SELECT count(*) as count,gender FROM "+DATABASE_NAME+".VoterListMaster where voterType is NULL or voterType='normal' group by gender";
             const genderRatioDetails = await  sequelize.query(genderRatioDetailsQry)
             if(genderRatioDetails){
                 resObj = {...resObj,genderRatio:genderRatioDetails[0]}
             }
-            const totalMemberQry = "SELECT count(*) as totalMember FROM "+DATABASE_NAME+".VoterListMaster";
+            const totalMemberQry = "SELECT count(*) as totalMember FROM "+DATABASE_NAME+".VoterListMaster where voterType is NULL or voterType='normal'";
             const totalMemberDetails = await  sequelize.query(totalMemberQry)
             if(totalMemberDetails){
                 resObj = {...resObj,totalMember:totalMemberDetails[0]}
             }
 
-            const dobDetailsQry = "SELECT EXTRACT(year from dob) as year FROM "+DATABASE_NAME+".VoterListMaster GROUP BY EXTRACT(year FROM dob)";
+            const dobDetailsQry = "SELECT EXTRACT(year from dob) as year FROM "+DATABASE_NAME+".VoterListMaster where voterType is NULL or voterType='normal' GROUP BY EXTRACT(year FROM dob)";
             const dobDetails = await  sequelize.query(dobDetailsQry)
             const currentYear = new Date().getFullYear();
             if(totalMemberDetails){
@@ -4313,12 +4314,13 @@ const getDashboardCounts =  () => {
 
                 resObj = {...resObj,dobDetails:dobDetails[0],plus18tp35Members,plus36tp50Members,plus50Member,correctAgeNotAvailableMember}
             }
-            const voterCategoryDetailsQry = "SELECT count(*) as count,voterCategory FROM "+DATABASE_NAME+".VoterListMaster group by voterCategory";
+            const voterCategoryDetailsQry = "SELECT count(*) as count,voterCategory FROM "+DATABASE_NAME+".VoterListMaster where voterType is NULL or voterType='normal' group by voterCategory";
+
             const voterCategoryDetails = await  sequelize.query(voterCategoryDetailsQry)
             if(voterCategoryDetails){
                 resObj = {...resObj,voterCategoryRatio:voterCategoryDetails[0]}
             }
-            const familyDetailsQry = "SELECT distinct familyNumber FROM "+DATABASE_NAME+".VoterListMaster";
+            const familyDetailsQry = "SELECT distinct familyNumber FROM "+DATABASE_NAME+".VoterListMaster where voterType is NULL or voterType='normal'";
             const familyDetails = await  sequelize.query(familyDetailsQry)
             if(familyDetails){
                 resObj = {...resObj,familyDetails:familyDetails[0].length}
